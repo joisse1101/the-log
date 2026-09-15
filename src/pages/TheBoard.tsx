@@ -13,7 +13,7 @@ export default function TheBoard() {
 
     const boardOptions = (boards?.map(b => ({ value: b.id, label: b.name })) ?? []);
     const selectedBoardId = userSelectedBoardId && boardOptions.some(b => b.value === userSelectedBoardId) ? userSelectedBoardId : boards?.[0]?.id || '';
-    const { board } = useBoardData(selectedBoardId);
+    const { board, columnOptions } = useBoardData(selectedBoardId);
 
     useEffect(() => {
         if (userSelectedBoardId === 'add') {
@@ -63,11 +63,10 @@ export default function TheBoard() {
                     </div>
                 </div>
                 <div className="column-container">
-                    {board.columns.map((columnName) => (
+                    {board.columnIds.map((id) => (
                         <Column
-                            key={columnName}
-                            boardId={board.id}
-                            columnName={columnName}
+                            key={id}
+                            columnId={id}
                         />
                     ))}
                 </div>
@@ -81,6 +80,7 @@ export default function TheBoard() {
                     setIsAddBoardModalOpen(false);
                 }}
                 board={(isAddBoardModalOpen || !board) ? undefined : board}
+                columnOptions={(isAddBoardModalOpen || !board) ? undefined : columnOptions}
                 onSaved={(savedBoard) => setUserSelectedBoardId(savedBoard.id)}
             />
         </div   >

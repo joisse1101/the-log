@@ -33,11 +33,14 @@ Zod schemas double as both runtime validators and the source of TypeScript types
 - `z.infer<typeof XSchema>` → the stored/full type (e.g. `Board`, `Ticket`)
 - `z.input<typeof XSchema>` → the "create" type, before Zod defaults (id, timestamps) are applied
 
-Dexie (`LogDatabase`) defines four tables backed by these schemas:
+Dexie (`LogDatabase`) defines five tables backed by these schemas:
 - `logEntries` — free-form journal entries (the "log"), optionally linked to a ticket via `ticketId`
-- `boards` — kanban boards, each with an ordered `columns: string[]` (column *names* are the join key, not ids)
+- `boards` — kanban boards, each with an ordered `columnIds: string[]` — this array is the **single source of truth** for board→column membership and display order; `Column` itself has no `boardId` back-reference, so a column only belongs to whichever board's `columnIds` lists it
+- `columns` — kanban columns (id, name), reconciled by id via `syncColumns` in `useBoards.ts` so renaming/reordering columns (edited through `ConfigureBoardModal`) doesn't disturb existing ticket placement
 - `tickets` — kanban cards, board-agnostic on their own
-- `boardTickets` — the join table placing a ticket on a specific board+column with a `position` for ordering
+- `columnTickets` — the join table placing a ticket in a specific column, with a `position` for ordering within that column
+
+Deleting a board cascades to its columns and `columnTickets` rows (see `removeBoard`), but **not** to the `tickets` themselves — orphaned tickets are left in place intentionally, since tickets are board-agnostic and can outlive the column/board they were last placed on.
 
 A `logDb.on('ready', ...)` hook seeds a default board on first load so `TheBoard` always has something to render.
 
@@ -45,13 +48,13 @@ There is no repository/service layer — components call into hooks, and hooks t
 
 ### Data access hooks (`src/hooks/`)
 
-`useLogs.ts` and `useBoards.ts` wrap Dexie tables with `dexie-react-hooks`' `useLiveQuery`, so components re-render automatically on any DB write — there is no separate global state store (no Redux/Zustand/context). Each hook returns both the live-queried data and the mutator functions (add/update/remove) that operate on it, e.g. `useTicket(id)`, `useColumns(boardId, columnName)`, `useBoards()`, `useBoardData(boardId)`. When adding a new piece of persisted state, follow this pattern: extend the Zod schema/Dexie table, then add or extend a hook — don't reach for `logDb` directly from components.
+`useLogs.ts`, `useBoards.ts`, and `useColumns.ts` wrap Dexie tables with `dexie-react-hooks`' `useLiveQuery`, so components re-render automatically on any DB write — there is no separate global state store (no Redux/Zustand/context). Each hook returns both the live-queried data and the mutator functions (add/update/remove) that operate on it, e.g. `useTicket(id)`, `useColumns(columnId)`, `useBoards()`, `useBoardData(boardId)`. When adding a new piece of persisted state, follow this pattern: extend the Zod schema/Dexie table, then add or extend a hook — don't reach for `logDb` directly from components.
 
 ### Routing & pages (`src/App.tsx`, `src/pages/`)
 
 Three routes under `MainLayout` (`src/layouts/MainLayout.tsx`, which wraps `Outlet` with the ui-library `Header`/`Footer`):
 - `/the-log` → `Home.tsx` — the log/journal view (list of `logEntries`)
-- `/the-log/the-board` → `TheBoard.tsx` — kanban board; renders one `Column` per `board.columns` entry, each column pulling its tickets via `useColumns`
+- `/the-log/the-board` → `TheBoard.tsx` — kanban board; renders one `Column` per `board.columnIds` entry, each column pulling its own data and tickets via `useColumns(columnId)`
 - `/the-log/the-board/tickets/:ticketId` → `TicketDetails.tsx` — edit/delete a single ticket
 
 Board-specific presentational pieces live in `src/components/partials/theBoard/` (`Column`, `TicketCard`, `ConfigureBoardModal`).

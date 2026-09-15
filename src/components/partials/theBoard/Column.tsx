@@ -1,17 +1,16 @@
-import { useColumns } from '@/hooks/useBoards';
+import { useColumns } from '@/hooks/useColumns';
 import { Button } from '@joisse1101/ui-library';
 import { TicketCard } from './TicketCard';
 
 interface ColumnProps {
-    boardId: string;
-    columnName: string;
+    columnId: string;
 }
-export const Column: React.FC<ColumnProps> = ({ boardId, columnName }) => {
-    const {addTicket, tickets} = useColumns(boardId, columnName); 
+export const Column: React.FC<ColumnProps> = ({ columnId }) => {
+    const { addTicket, tickets, column } = useColumns(columnId);
     return (
-        <div className="column" key={columnName}>
+        <div className="column" key={columnId}>
             <div className="header">
-                <span>{columnName}</span>
+                <span>{column?.name}</span>
                 <Button
                     onClick={() => { addTicket(); }}
                     variant="primary"
@@ -20,14 +19,14 @@ export const Column: React.FC<ColumnProps> = ({ boardId, columnName }) => {
                     +
                 </Button>
             </div>
-            <ul>
+            <div className="tickets-container">
                 {tickets.map((ticket) => (
                     <TicketCard
                         key={ticket.id}
                         ticketId={ticket.id}
                     />
                 ))}
-            </ul>
+            </div>
         </div>
     );
 };
