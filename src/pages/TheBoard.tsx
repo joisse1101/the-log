@@ -1,5 +1,7 @@
 import { useBoardData, useBoards } from '@/hooks/useBoards';
 import { useState, useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button, InlineSelect } from '@joisse1101/ui-library';
 import { ConfigureBoardModal } from '@/components/partials/theBoard/ConfigureBoardModal';
 import { getDisplayDate, isValidDateString } from '@/utils/dates';
@@ -62,14 +64,16 @@ export default function TheBoard() {
                         />
                     </div>
                 </div>
-                <div className="column-container">
-                    {board.columnIds.map((id) => (
-                        <Column
-                            key={id}
-                            columnId={id}
-                        />
-                    ))}
-                </div>
+                <DndProvider backend={HTML5Backend}>
+                    <div className="column-container">
+                        {board.columnIds.map((id) => (
+                            <Column
+                                key={id}
+                                columnId={id}
+                            />
+                        ))}
+                    </div>
+                </DndProvider>
             </>
             }
             <ConfigureBoardModal

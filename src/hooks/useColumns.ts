@@ -41,7 +41,25 @@ export function useColumns(columnId: string) {
         }));
     };
 
+    const moveTicket = async (ticketId: string, fromColumnId: string) => {
+        if (fromColumnId === columnId) return;
+        const columnTicket = await logDb.columnTickets
+            .where('ticketId')
+            .equals(ticketId)
+            .and((ct) => ct.columnId === fromColumnId)
+            .first();
+        if (!columnTicket) return;
 
+        const count = await logDb.columnTickets
+            .where('columnId')
+            .equals(columnId)
+            .count();
 
-    return { addTicket, tickets, column };
+        await logDb.columnTickets.update(columnTicket.id, {
+            columnId,
+            position: count + 1,
+        });
+    };
+
+    return { addTicket, tickets, column, moveTicket };
 }
