@@ -34,7 +34,12 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticketId, columnId }) =>
     if (!ticket) return null;
 
     return (
-        <div ref={dragRef} className="ticket-card-drag-handle" style={{ opacity: isDragging ? 0.5 : 1 }}>
+        <div
+            ref={dragRef}
+            data-ticket-id={ticketId}
+            className="ticket-card-drag-handle"
+            style={{ opacity: isDragging ? 0.5 : 1 }}
+        >
             <Link to={`/the-log/the-board/tickets/${ticket.id}`}>
                 <div className="card ticket-card">
                     <span className="ticket-card-title">{ticket.title}</span>

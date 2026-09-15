@@ -38,7 +38,7 @@ Dexie (`LogDatabase`) defines five tables backed by these schemas:
 - `boards` — kanban boards, each with an ordered `columnIds: string[]` — this array is the **single source of truth** for board→column membership and display order; `Column` itself has no `boardId` back-reference, so a column only belongs to whichever board's `columnIds` lists it
 - `columns` — kanban columns (id, name), reconciled by id via `syncColumns` in `useBoards.ts` so renaming/reordering columns (edited through `ConfigureBoardModal`) doesn't disturb existing ticket placement
 - `tickets` — kanban cards, board-agnostic on their own
-- `columnTickets` — the join table placing a ticket in a specific column, with a `position` for ordering within that column
+- `columnTickets` — the join table placing a ticket in a specific column, with a fractional `position` for ordering within that column (see `src/utils/positioning.ts`)
 
 Deleting a board cascades to its columns and `columnTickets` rows (see `removeBoard`), but **not** to the `tickets` themselves — orphaned tickets are left in place intentionally, since tickets are board-agnostic and can outlive the column/board they were last placed on.
 
@@ -58,6 +58,10 @@ Three routes under `MainLayout` (`src/layouts/MainLayout.tsx`, which wraps `Outl
 - `/the-log/the-board/tickets/:ticketId` → `TicketDetails.tsx` — edit/delete a single ticket
 
 Board-specific presentational pieces live in `src/components/partials/theBoard/` (`Column`, `TicketCard`, `ConfigureBoardModal`).
+
+### Ticket drag-and-drop
+
+Built on `react-dnd` + `react-dnd-html5-backend`, scoped to `TheBoard.tsx` via a single `DndProvider`. `TicketCard` is the drag source; `Column` is the only drop target (dropping is resolved against the whole column, not per-card, so there's no dead space between cards for a drop to fall through). `Column.resolveDropTarget` finds the card nearest the cursor and decides before/after by comparing that card's original position to the dragged card's — not by cursor half — since half-based detection is a no-op for adjacent swaps. `useColumns().moveTicket(ticketId, fromColumnId, target?)` handles both cross-column moves and same-column reorders using fractional positions from `src/utils/positioning.ts`, rebalancing the column in one batch when positions get too tight to insert between.
 
 ### Other conventions
 
