@@ -5,7 +5,7 @@ export function MainLayout() {
     return (
         <div className="layout">
             <Header links={[
-                { label: 'The Log', href: '/the-log' },
+                { label: 'The Log', href: '/the-log/' },
                 { label: 'The Board', href: '/the-log/the-board' },
             ]} >
             </Header>
