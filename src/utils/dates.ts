@@ -15,6 +15,18 @@ export function getDisplayDate(date: Date): string {
     return formattedDate
 }
 
+export function getShortDisplayDateTime(date: Date): string {
+    const formattedDate = new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+    }).format(date);
+
+    return formattedDate;
+}
+
 export function getDisplayTime(date: Date): string {
     const formattedTime = new Intl.DateTimeFormat(undefined, {
         hour: 'numeric',

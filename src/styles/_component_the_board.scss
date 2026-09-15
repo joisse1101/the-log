@@ -21,13 +21,13 @@
     gap: 0.5rem;
     flex: 1;
 
-     &.is-over {
-        box-shadow: inset $shadow-glow;
+    &.is-over {
+      box-shadow: inset $shadow-glow;
     }
     .tickets-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     .header {
@@ -43,6 +43,11 @@
   .column:first-child {
     border-left: none;
   }
+}
+
+.ticket-card-link {
+  text-decoration: none !important;
+  color: inherit; /* Prevents default blue link text */
 }
 
 .ticket-card {
