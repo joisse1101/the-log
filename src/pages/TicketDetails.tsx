@@ -44,7 +44,7 @@ export default function TicketDetails() {
 
     if (!ticket) {
         return (
-            <div className="ticket-details">
+            <div className="app-wrapper ticket-details">
                 <p>Ticket not found.</p>
                 <Link to="/the-log/the-board">&larr; Back to Board</Link>
             </div>
@@ -52,7 +52,7 @@ export default function TicketDetails() {
     }
 
     return (
-        <div className="ticket-details">
+        <div className="app-wrapper ticket-details">
             <div className="ticket-details-header">
                 <Link to="/the-log/the-board">&larr; Back to Board</Link>
                 <span className="date">Created {getDisplayDate(new Date(ticket.createdAt))}</span>

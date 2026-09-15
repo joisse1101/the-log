@@ -2,6 +2,7 @@ import { Modal, DateInput, Button } from "@joisse1101/ui-library";
 import { useState } from "react";
 import type { Board, BoardState } from "../../../db/theLogsDb";
 import { useBoards } from "@/hooks/useBoards";
+import type { Option } from "@/types/general";
 
 const DEFAULT_COLUMNS = ['TODO', 'In Progress', 'Done'];
 
@@ -17,26 +18,30 @@ interface ConfigureBoardModalProps {
     isOpen: boolean;
     onClose: () => void;
     board?: Board;
+    columnOptions?: Option[];
     onSaved?: (board: Board) => void;
 }
 export const ConfigureBoardModal: React.FC<ConfigureBoardModalProps> = ({
     isOpen,
     onClose,
     board,
+    columnOptions,
     onSaved,
 }) => {
     const [boardName, setBoardName] = useState<string>(board?.name ?? '');
-    const [columns, setColumns] = useState<string[]>(board?.columns ?? DEFAULT_COLUMNS);
+    const [columns, setColumns] = useState<Option[]>(
+        columnOptions && columnOptions.length > 0 ? columnOptions : DEFAULT_COLUMNS.map((label) => ({ value: '', label }))
+    );
     const [startDate, setStartDate] = useState<string>(toDateInputValue(board?.startDate));
     const [endDate, setEndDate] = useState<string>(toDateInputValue(board?.endDate));
     const [errors, setErrors] = useState<string[]>([]);
 
     const { addBoard, updateBoard } = useBoards();
 
-    const updateColumn = (index: number, value: string) => {
-        setColumns((prev) => prev.map((c, i) => (i === index ? value : c)));
+    const updateColumn = (index: number, label: string) => {
+        setColumns((prev) => prev.map((c, i) => (i === index ? { ...c, label } : c)));
     };
-    const addColumn = () => setColumns((prev) => [...prev, '']);
+    const addColumn = () => setColumns((prev) => [...prev, { value: '', label: '' }]);
     const removeColumn = (index: number) => setColumns((prev) => prev.filter((_, i) => i !== index));
 
     const handleValidateAndSubmit = async () => {
@@ -46,16 +51,18 @@ export const ConfigureBoardModal: React.FC<ConfigureBoardModalProps> = ({
             setErrors(newErrors);
             return;
         }
-        const trimmedColumns = columns.map((c) => c.trim()).filter(Boolean);
-        const updates: Partial<BoardState> = {
+        const trimmedColumns = columns
+            .map((c) => ({ ...c, label: c.label.trim() }))
+            .filter((c) => c.label.length > 0);
+        const columnsToSave = trimmedColumns.length > 0 ? trimmedColumns : DEFAULT_COLUMNS.map((label) => ({ value: '', label }));
+        const updates: Partial<Omit<BoardState, 'columnIds'>> = {
             name: boardName,
-            columns: trimmedColumns.length > 0 ? trimmedColumns : DEFAULT_COLUMNS,
             ...(startDate ? { startDate: toIsoDatetime(startDate) } : {}),
             ...(endDate ? { endDate: toIsoDatetime(endDate) } : {}),
         };
         const savedBoard = board
-            ? await updateBoard(board.id, updates)
-            : await addBoard(updates);
+            ? await updateBoard(board.id, updates, columnsToSave)
+            : await addBoard(updates, columnsToSave);
         if (savedBoard) {
             onSaved?.(savedBoard);
         }
@@ -83,7 +90,7 @@ export const ConfigureBoardModal: React.FC<ConfigureBoardModalProps> = ({
                                     type="text"
                                     aria-label={`Column ${index + 1}`}
                                     placeholder={`Column ${index + 1}`}
-                                    value={column}
+                                    value={column.label}
                                     onChange={(e) => updateColumn(index, e.target.value)}
                                 />
                                 <Button type="button" onClick={() => removeColumn(index)} variant="danger" icon={true}>✕</Button>

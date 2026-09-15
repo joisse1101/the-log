@@ -18,11 +18,20 @@ export const TicketSchema = z.object({
     updatedAt: z.iso.datetime().default(() => new Date().toISOString()),
 });
 
-export const BoardTicketSchema = z.object({
+export const ColumnSchema = z.object({
     id: z.uuid().default(() => crypto.randomUUID()),
-    boardId: z.string(),
+    name: z.string(),
+    createdAt: z.iso.datetime().default(() => new Date().toISOString()),
+    updatedAt: z.iso.datetime().default(() => new Date().toISOString()),
+});
+
+export type Column = z.infer<typeof ColumnSchema>;
+export type CreateColumn = z.input<typeof ColumnSchema>;
+
+export const ColumnTicketSchema = z.object({
+    id: z.uuid().default(() => crypto.randomUUID()),
+    columnId: z.string(),
     ticketId: z.string(),
-    columnName: z.string(),
     position: z.number(),
     assignedAt: z.iso.datetime().default(() => new Date().toISOString()),
 });
@@ -30,7 +39,7 @@ export const BoardTicketSchema = z.object({
 export const BoardSchema = z.object({
     id: z.uuid().default(() => crypto.randomUUID()),
     name: z.string(),
-    columns: z.array(z.string()).default(['TODO', 'In Progress', 'Done']),
+    columnIds: z.array(z.string()).default([]),
     position: z.number().default(0),
     startDate: z.iso.datetime().default(() => new Date().toISOString()),
     endDate: z.optional(z.iso.datetime()),
@@ -42,8 +51,8 @@ export type Board = z.infer<typeof BoardSchema>;
 export type CreateBoard = z.input<typeof BoardSchema>;
 export type BoardState = Omit<Board, 'id' | 'createdAt' | 'updatedAt'>;
 
-export type BoardTicket = z.infer<typeof BoardTicketSchema>;
-export type CreateBoardTicket = z.input<typeof BoardTicketSchema>;
+export type ColumnTicket = z.infer<typeof ColumnTicketSchema>;
+export type CreateColumnTicket = z.input<typeof ColumnTicketSchema>;
 
 export type Ticket = z.infer<typeof TicketSchema>;
 export type CreateTicket = z.input<typeof TicketSchema>;
@@ -54,7 +63,8 @@ export type CreateLogEntry = z.input<typeof LogEntrySchema>;
 export class LogDatabase extends Dexie {
     logEntries!: Table<LogEntry, string>;
     boards!: Table<Board, string>;
-    boardTickets!: Table<BoardTicket, string>;
+    columns!: Table<Column, string>;
+    columnTickets!: Table<ColumnTicket, string>;
     tickets!: Table<Ticket, string>;
 
     constructor() {
@@ -62,24 +72,32 @@ export class LogDatabase extends Dexie {
         this.version(1).stores({
             logEntries: 'id, createdAt, updatedAt, ticketId',
             boards: 'id, name, position, startDate, endDate, createdAt, updatedAt',
-            boardTickets: 'id, boardId, ticketId, columnName, position, assignedAt',
             tickets: 'id, title, createdAt, updatedAt',
+            columns: 'id, name, createdAt, updatedAt',
+            columnTickets: 'id, columnId, ticketId, position, assignedAt',
         });
     }
 }
 
 export const logDb = new LogDatabase();
 
-const defaultBoard = BoardSchema.parse({
-    id: crypto.randomUUID(),
-    name: 'Default Board',
-    columns: ['TODO', 'In Progress', 'Done'],
-    position: 0,
-});
+const DEFAULT_COLUMN_NAMES = ['TODO', 'In Progress', 'Done'];
 
 logDb.on('ready', async () => {
     const count = await logDb.boards.count();
     if (count === 0) {
+        const columnIds = await Promise.all(
+            DEFAULT_COLUMN_NAMES.map(async (name) => {
+                const column = ColumnSchema.parse({ name });
+                await logDb.columns.add(column);
+                return column.id;
+            })
+        );
+        const defaultBoard = BoardSchema.parse({
+            name: 'Backlog',
+            columnIds,
+            position: 0,
+        });
         await logDb.boards.add(defaultBoard);
     }
 })

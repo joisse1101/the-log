@@ -1,5 +1,7 @@
 import { useBoardData, useBoards } from '@/hooks/useBoards';
 import { useState, useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Button, InlineSelect } from '@joisse1101/ui-library';
 import { ConfigureBoardModal } from '@/components/partials/theBoard/ConfigureBoardModal';
 import { getDisplayDate, isValidDateString } from '@/utils/dates';
@@ -13,7 +15,7 @@ export default function TheBoard() {
 
     const boardOptions = (boards?.map(b => ({ value: b.id, label: b.name })) ?? []);
     const selectedBoardId = userSelectedBoardId && boardOptions.some(b => b.value === userSelectedBoardId) ? userSelectedBoardId : boards?.[0]?.id || '';
-    const { board } = useBoardData(selectedBoardId);
+    const { board, columnOptions } = useBoardData(selectedBoardId);
 
     useEffect(() => {
         if (userSelectedBoardId === 'add') {
@@ -62,15 +64,16 @@ export default function TheBoard() {
                         />
                     </div>
                 </div>
-                <div className="column-container">
-                    {board.columns.map((columnName) => (
-                        <Column
-                            key={columnName}
-                            boardId={board.id}
-                            columnName={columnName}
-                        />
-                    ))}
-                </div>
+                <DndProvider backend={HTML5Backend}>
+                    <div className="column-container">
+                        {board.columnIds.map((id) => (
+                            <Column
+                                key={id}
+                                columnId={id}
+                            />
+                        ))}
+                    </div>
+                </DndProvider>
             </>
             }
             <ConfigureBoardModal
@@ -81,6 +84,7 @@ export default function TheBoard() {
                     setIsAddBoardModalOpen(false);
                 }}
                 board={(isAddBoardModalOpen || !board) ? undefined : board}
+                columnOptions={(isAddBoardModalOpen || !board) ? undefined : columnOptions}
                 onSaved={(savedBoard) => setUserSelectedBoardId(savedBoard.id)}
             />
         </div   >
