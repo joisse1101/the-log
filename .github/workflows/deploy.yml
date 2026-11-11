@@ -1,7 +1,12 @@
 name: Publish site
 
-# Runs only after the "Checks" workflow finishes on main, so a failed
-# type-check, test or build never reaches the deploy job.
+# Publishes only code that passed its checks, and only the newest commit of main.
+# - After the "Checks" workflow finishes on main, the gate job skips the run when
+#   the commit is no longer the head of main, so a late older run cannot replace
+#   a newer deploy with stale content.
+# - A manual run builds only main, and the build job type-checks and tests before
+#   it builds, so a manual run never deploys unchecked code.
+# A failed type-check, test or build never reaches the deploy job.
 on:
   workflow_run:
     workflows: [Checks]
@@ -9,7 +14,7 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Least privilege for the build job; the deploy job sets its own below.
+# Least privilege for the gate and build jobs; the deploy job sets its own below.
 permissions:
   contents: read
 
@@ -18,8 +23,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      is_head: ${{ steps.freshness.outputs.is_head }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: freshness
+        run: |
+          main_head="$(git ls-remote origin refs/heads/main)"
+          main_head="${main_head%%[[:space:]]*}"
+          if [ -z "$main_head" ]; then
+            echo "Could not read the head of main" >&2
+            exit 1
+          fi
+          if [ "$main_head" = "$(git rev-parse HEAD)" ]; then
+            echo "is_head=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_head=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping deploy: $(git rev-parse HEAD) is not the head of main ($main_head)"
+          fi
+
   build:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    needs: gate
+    if: needs.gate.outputs.is_head == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -30,6 +60,8 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
