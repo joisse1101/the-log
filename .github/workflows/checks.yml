@@ -24,3 +24,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npx vite build
+      # On main only, keep this verified build so "Publish site" deploys it as is
+      # instead of building again. Pull requests upload nothing.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
