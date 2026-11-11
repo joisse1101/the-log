@@ -1,0 +1,110 @@
+name: Publish site
+
+# Publishes only code that passed its checks, and only the newest commit of main.
+# - After the "Checks" workflow finishes on main, the gate job skips the run when
+#   the commit is no longer the head of main, so a late older run cannot replace
+#   a newer deploy with stale content.
+# - After Checks, the fetch job takes the site that Checks built and verified, so
+#   main is built once and the deployed files are exactly the tested ones.
+# - A manual run has no Checks run to take a build from: it builds only main, and
+#   the build job type-checks and tests before it builds, so a manual run never
+#   deploys unchecked code.
+# A failed type-check, test or build never reaches the deploy job.
+on:
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege for the gate and build jobs; the deploy job sets its own below.
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      is_head: ${{ steps.freshness.outputs.is_head }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - id: freshness
+        run: |
+          main_head="$(git ls-remote origin refs/heads/main)"
+          main_head="${main_head%%[[:space:]]*}"
+          if [ -z "$main_head" ]; then
+            echo "Could not read the head of main" >&2
+            exit 1
+          fi
+          if [ "$main_head" = "$(git rev-parse HEAD)" ]; then
+            echo "is_head=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_head=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping deploy: $(git rev-parse HEAD) is not the head of main ($main_head)"
+          fi
+
+  # After Checks: copy the Pages artifact Checks uploaded into this run, where
+  # deploy-pages looks for it. Nothing is installed or built here.
+  fetch:
+    needs: gate
+    if: needs.gate.outputs.is_head == 'true' && github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: artifact.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  # Manual run only: type-check, test and build main here.
+  build:
+    needs: gate
+    if: needs.gate.outputs.is_head == 'true' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  # Runs after whichever of fetch or build ran and succeeded; the other is skipped.
+  deploy:
+    needs: [fetch, build]
+    if: ${{ !cancelled() && (needs.fetch.result == 'success' || needs.build.result == 'success') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
