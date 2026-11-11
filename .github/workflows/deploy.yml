@@ -1,8 +1,13 @@
 name: Publish site
 
+# Runs only after the "Checks" workflow finishes on main, so a failed
+# type-check, test or build never reaches the deploy job.
 on:
-  push:
+  workflow_run:
+    workflows: [Checks]
+    types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 # Least privilege for the build job; the deploy job sets its own below.
 permissions:
@@ -14,16 +19,17 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v6
         with:
           node-version: 26
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
