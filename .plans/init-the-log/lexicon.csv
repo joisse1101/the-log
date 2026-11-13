@@ -1,6 +1,7 @@
 ﻿Term,Part of,Definition,Avoid,Notes
 Thought,,"One piece of free-form text the user writes, saved with an automatic date and time and zero or more tags.",entry;note;post,
-Log,,"All thoughts in the linked gist, shown newest first.",journal;feed,
+Log,,"All thoughts in one place, either the linked gist or this device, shown newest first.",journal;feed,
 Tag,,"A short label on a thought, used to filter and search the log.",label;keyword;category,
-Linked gist,,The GitHub gist the user chose to store their log in.,storage;repository,
+Linked gist,,The GitHub gist the user chose to keep gist thoughts in.,storage;repository,
 Access token,,The GitHub personal access token the user pastes in so the app can read and write their linked gist.,password;key;credential,
+Local thoughts,,"Thoughts saved in a local file on this device that is never committed, kept apart from the thoughts in a gist.",drafts;cache;offline thoughts,

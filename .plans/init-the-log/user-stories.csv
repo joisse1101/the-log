@@ -2,18 +2,24 @@
 INIT-SAA-0001,Storage and Access,Hosting,Open the log from GitHub Pages,"As a user, I want the app at a GitHub Pages web address, so that I can write from any device",3,,,"AC1: Given a change on the main branch, when it is pushed, then the site is rebuilt and published
 AC2: Given I open https://joisse1101.github.io/the-log/ on a phone or a laptop, when it loads, then it is served over HTTPS and the app page is shown
 AC3: Given the build fails, when I open the address, then the live site is still the last good version",The repository is joisse1101/the-log. Hosting is the only story in its Feature.,,Yes
-INIT-SAA-0002,Storage and Access,GitHub Connection,Connect GitHub with an access token,"As a user, I want to paste my GitHub access token, so that the app can store my log under my account",3,Medium,,"AC1: Given a valid access token with gist permission, when I connect, then my GitHub username is shown
+INIT-SAA-0002,Storage and Access,GitHub Connection,Connect GitHub with an access token,"As a user, I want to paste my GitHub access token, so that the app can store my log under my account",3,,,"AC1: Given a valid access token with gist permission, when I connect, then my GitHub username is shown
 AC2: Given an invalid or expired access token, when I connect, then I am told it was refused and nothing is stored
 AC3: Given a valid access token without gist permission, when I connect, then I am told which permission is missing
 AC4: Given I am connected, when I reopen the app in the same browser, then I am still connected
 AC5: Given nothing is entered, when I connect, then I am told an access token is needed and nothing is stored
 AC6: Given GitHub cannot be reached, when I connect, then I am told the connection failed and I am not shown as connected","Paste-a-token was chosen over a Sign in with GitHub button, which would need a hosted helper service and is deferred. The token is kept in the browser.","Q1: Do GitHub fine-grained tokens still lack gist access, so that only a classic token with the gist permission works? To be verified in the first build.
 A1:",
-INIT-SAA-0003,Storage and Access,GitHub Connection,Link or create a gist,"As a user, I want to pick an existing gist or create a new one for my log, so that my data lives where I choose",3,,INIT-SAA-0001,"AC1: Given I am connected, when I choose to create a new gist and pick private or public, then a gist of that kind is created and linked, and a public choice first warns me that anyone can read my thoughts
+INIT-SAA-0003,Storage and Access,GitHub Connection,Link or create a gist,"As a user, I want to pick one of my gists, or create a new one, for my log, so that my gist thoughts live where I choose",5,,INIT-SAA-0001,"AC1: Given I am connected, when I choose to create a new gist and pick private or public, then a gist of that kind is created and linked, and a public choice first warns me that anyone can read my thoughts
 AC2: Given I paste the ID of a gist I own, when I link it, then it is linked, its thoughts show and it is labelled private or public
 AC3: Given an ID that does not exist or belongs to someone else, when I link it, then I am told and nothing is linked
 AC4: Given a gist whose file is not in the log format, when I link it, then I am warned before it is used
-AC5: Given GitHub cannot be reached, when I create or link a gist, then I am told it failed and nothing is linked","Private is preselected. Privacy is up to the user and no further warnings are added. The whole log is one text file in the gist. Building against a stubbed connection is enough, so this does not block on the connect story.",,
+AC5: Given GitHub cannot be reached, when I create or link a gist, then I am told it failed and nothing is linked
+AC6: Given I am connected and have no related gists, when I open the gist picker, then I see an empty message and the option to create one
+AC7: Given I am connected, when I open the gist picker, then I see my related gists, each labelled private or public, and I can select one to link it
+AC8: Given I am disconnected, when I open the gist picker, then I am prompted to connect and no gist is listed or linked","Private is preselected. Privacy is up to the user and no further warnings are added. The whole log is one text file in the gist. Building against a stubbed connection is enough, so this does not block on the connect story.","Q1: Which gists count as related: all of the user's gists, or only those holding a log file?
+A1:
+Q2: Does a user with many gists see all of them, or a limited, paged list?
+A2:",
 INIT-SAA-0004,Storage and Access,GitHub Connection,Disconnect GitHub,"As a user, I want to disconnect my GitHub account, so that my access token is not left on a shared device",1,,INIT-SAA-0001,"AC1: Given I am connected, when I disconnect, then the access token and the gist link are removed from the browser
 AC2: Given I disconnected, when I look at the gist on GitHub, then the gist and its thoughts are unchanged
 AC3: Given an unsaved draft, when I disconnect, then the draft is also removed",Disconnect also clears the draft so nothing is left on a shared device.,,
@@ -26,8 +32,10 @@ AC6: Given the gist changes between my check and my save, when I save, then the 
 INIT-SAA-0006,Storage and Access,Cross-device Sync,Refresh the log,"As a user, I want to reload the log on demand, so that I see what I wrote on my other device",2,,,"AC1: Given a thought was added from another device, when I refresh, then it shows in the log
 AC2: Given I am midway through writing, when I refresh, then my draft is not erased
 AC3: Given the gist cannot be read, when I refresh, then I see an error and the log I already had stays",,,
-INIT-TL-0001,Thought Log,Thought Capture,Write a thought,"As a user, I want to type a thought in free-form text and save it, so that I capture it before it is lost",5,,INIT-SAA-0003,claud,Only text is stored. Each thought gets a unique ID so devices can tell thoughts apart. On the size limit only a warning is shown for now. Building against a stubbed gist is enough.,"Q1: The acceptance criteria cell holds only the text ""claud"". Proposed criteria: a typed thought is saved with an automatic date and time and appears in the log; empty text is refused with a message; a save that fails keeps the text and shows an error; text over the size limit shows a warning (limit to be agreed). Can these be entered as AC1 to AC4?
-A1:",
+INIT-TL-0001,Thought Log,Thought Capture,Write a thought,"As a user, I want to type a thought in free-form text and save it, so that I capture it before it is lost",5,,,"AC1: Given I have typed text, when I save, then a thought is added to the log with the current date and time and shows at the top
+AC2: Given I have saved a thought, when the save finishes, then the text box is empty and ready for the next thought
+AC3: Given the text box is empty or holds only spaces, when I save, then I am told a thought needs some text and nothing is saved
+AC4: Given the save fails, when I save, then I am told it failed, my text stays in the box and nothing is added to the log","Only text is stored. Each thought gets a unique ID so devices can tell thoughts apart. The size limit is only a warning for now, and the warning is not tested here. Building against a stubbed gist is enough. Where a thought is saved belongs to ""Keep thoughts on this device"" and ""Choose where a thought is saved"".",,
 INIT-TL-0002,Thought Log,Thought Capture,Keep an unsaved thought,"As a user, I want my half-written text to survive a closed tab or a failed save, so that I never lose a thought",2,,INIT-TL-0001,"AC1: Given I typed text and did not save, when I close and reopen the app in the same browser, then my text is back in the box
 AC2: Given a save fails, when I look at the box, then my text is still there and I can try again
 AC3: Given a save succeeds, when it finishes, then the kept draft is cleared
@@ -48,8 +56,9 @@ AC4: Given an empty tag, when I add it, then it is not added",,,
 INIT-TL-0006,Thought Log,Log Browsing,View thoughts as a log,"As a user, I want to read my thoughts newest first with date and time, like a git log, so that I can follow how my thinking moved",3,,INIT-SAA-0003,"AC1: Given several thoughts, when I open the log, then each shows its date, time, text and tags, newest first
 AC2: Given no thoughts, when I open the log, then I see an empty-log message
 AC3: Given more than 50 thoughts, when I open the log, then the first 50 show and I can load the next 50
-AC4: Given the gist cannot be read, when I open the log, then I see an error and a retry
-AC5: Given the log file is over 1 MB, when I open the log, then every thought still loads",Building against a stubbed gist is enough.,"Q1: Are the gist limits as recalled: a file read in full by the API up to about 1 MB, and through its raw link up to about 10 MB? To be verified in the first build.
+AC4: Given the chosen gist cannot be read, when I open the log, then I see an error and a retry
+AC5: Given the log file is over 1 MB, when I open the log, then every thought still loads","Building against a stubbed gist is enough.
+The log shows the chosen place only, local or gist; the two are never merged.","Q1: Are the gist limits as recalled: a file read in full by the API up to about 1 MB, and through its raw link up to about 10 MB? To be verified in the first build.
 A1:",
 INIT-TL-0007,Thought Log,Log Browsing,Filter thoughts by tag,"As a user, I want to show only thoughts with a given tag, so that I can see one theme",2,,INIT-TL-0005,"AC1: Given a chosen tag, when I filter, then only thoughts with that tag show, newest first
 AC2: Given a tag with no thoughts, when I filter, then I see a nothing-found message
