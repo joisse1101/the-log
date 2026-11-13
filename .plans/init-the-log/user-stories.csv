@@ -1,0 +1,61 @@
+﻿ID,Epic,Feature,Title,User Story,Sprint points,Priority,Depends On,User Acceptance Criteria,Notes,Clarifications,Frozen
+INIT-SAA-0001,Storage and Access,Hosting,Open the log from GitHub Pages,"As a user, I want the app at a GitHub Pages web address, so that I can write from any device",3,,,"AC1: Given a change on the main branch, when it is pushed, then the site is rebuilt and published
+AC2: Given I open https://joisse1101.github.io/the-log/ on a phone or a laptop, when it loads, then it is served over HTTPS and the app page is shown
+AC3: Given the build fails, when I open the address, then the live site is still the last good version",The repository is joisse1101/the-log. Hosting is the only story in its Feature.,,Yes
+INIT-SAA-0002,Storage and Access,GitHub Connection,Connect GitHub with an access token,"As a user, I want to paste my GitHub access token, so that the app can store my log under my account",3,Medium,,"AC1: Given a valid access token with gist permission, when I connect, then my GitHub username is shown
+AC2: Given an invalid or expired access token, when I connect, then I am told it was refused and nothing is stored
+AC3: Given a valid access token without gist permission, when I connect, then I am told which permission is missing
+AC4: Given I am connected, when I reopen the app in the same browser, then I am still connected
+AC5: Given nothing is entered, when I connect, then I am told an access token is needed and nothing is stored
+AC6: Given GitHub cannot be reached, when I connect, then I am told the connection failed and I am not shown as connected","Paste-a-token was chosen over a Sign in with GitHub button, which would need a hosted helper service and is deferred. The token is kept in the browser.","Q1: Do GitHub fine-grained tokens still lack gist access, so that only a classic token with the gist permission works? To be verified in the first build.
+A1:",
+INIT-SAA-0003,Storage and Access,GitHub Connection,Link or create a gist,"As a user, I want to pick an existing gist or create a new one for my log, so that my data lives where I choose",3,,INIT-SAA-0001,"AC1: Given I am connected, when I choose to create a new gist and pick private or public, then a gist of that kind is created and linked, and a public choice first warns me that anyone can read my thoughts
+AC2: Given I paste the ID of a gist I own, when I link it, then it is linked, its thoughts show and it is labelled private or public
+AC3: Given an ID that does not exist or belongs to someone else, when I link it, then I am told and nothing is linked
+AC4: Given a gist whose file is not in the log format, when I link it, then I am warned before it is used
+AC5: Given GitHub cannot be reached, when I create or link a gist, then I am told it failed and nothing is linked","Private is preselected. Privacy is up to the user and no further warnings are added. The whole log is one text file in the gist. Building against a stubbed connection is enough, so this does not block on the connect story.",,
+INIT-SAA-0004,Storage and Access,GitHub Connection,Disconnect GitHub,"As a user, I want to disconnect my GitHub account, so that my access token is not left on a shared device",1,,INIT-SAA-0001,"AC1: Given I am connected, when I disconnect, then the access token and the gist link are removed from the browser
+AC2: Given I disconnected, when I look at the gist on GitHub, then the gist and its thoughts are unchanged
+AC3: Given an unsaved draft, when I disconnect, then the draft is also removed",Disconnect also clears the draft so nothing is left on a shared device.,,
+INIT-SAA-0005,Storage and Access,Cross-device Sync,Merge thoughts saved from two devices,"As a user, I want writes from my phone and laptop to combine, so that neither device overwrites the other",8,,INIT-TL-0001,"AC1: Given two devices each saved a new thought since they last loaded, when both have saved, then the log holds both thoughts
+AC2: Given the same thought was edited on both devices, when both have saved, then the one with the later edit time is kept
+AC3: Given I deleted a thought on this device and no other device changed it since this device last loaded, when I save, then the thought is gone and no deletion marker is added to the file
+AC4: Given I deleted a thought on this device and another device edited it since this device last loaded, when I save, then the later of the delete and the edit wins
+AC5: Given the version of the gist this device last loaded cannot be fetched, when I save, then I am told and nothing is overwritten
+AC6: Given the gist changes between my check and my save, when I save, then the app merges again before writing","The merge compares three things: the version this device last loaded from the gist's version history, this device's thoughts, and the gist's current version. Gists cannot refuse a save when they changed, so the app re-checks just before writing; this is best effort, not a guarantee. Building against a stubbed gist is enough.",,
+INIT-SAA-0006,Storage and Access,Cross-device Sync,Refresh the log,"As a user, I want to reload the log on demand, so that I see what I wrote on my other device",2,,,"AC1: Given a thought was added from another device, when I refresh, then it shows in the log
+AC2: Given I am midway through writing, when I refresh, then my draft is not erased
+AC3: Given the gist cannot be read, when I refresh, then I see an error and the log I already had stays",,,
+INIT-TL-0001,Thought Log,Thought Capture,Write a thought,"As a user, I want to type a thought in free-form text and save it, so that I capture it before it is lost",5,,INIT-SAA-0003,claud,Only text is stored. Each thought gets a unique ID so devices can tell thoughts apart. On the size limit only a warning is shown for now. Building against a stubbed gist is enough.,"Q1: The acceptance criteria cell holds only the text ""claud"". Proposed criteria: a typed thought is saved with an automatic date and time and appears in the log; empty text is refused with a message; a save that fails keeps the text and shows an error; text over the size limit shows a warning (limit to be agreed). Can these be entered as AC1 to AC4?
+A1:",
+INIT-TL-0002,Thought Log,Thought Capture,Keep an unsaved thought,"As a user, I want my half-written text to survive a closed tab or a failed save, so that I never lose a thought",2,,INIT-TL-0001,"AC1: Given I typed text and did not save, when I close and reopen the app in the same browser, then my text is back in the box
+AC2: Given a save fails, when I look at the box, then my text is still there and I can try again
+AC3: Given a save succeeds, when it finishes, then the kept draft is cleared
+AC4: Given the browser blocks keeping drafts on this device, when I type, then the app still works and tells me drafts cannot be kept",,,
+INIT-TL-0003,Thought Log,Thought Capture,Edit a thought,"As a user, I want to correct a saved thought, so that the log stays accurate",2,,INIT-TL-0001,"AC1: Given a saved thought, when I change its text or tags and save, then the log shows the new text and keeps the original timestamp
+AC2: Given the thought was deleted elsewhere, when I save, then I am told it no longer exists
+AC3: Given the save to the gist fails, when I save, then my change is kept in the box and I see an error
+AC4: Given I remove all the text, when I save, then I am told text is needed and the saved thought is unchanged",,"Q1: The merge story keeps the edit with the later edit time, but this story keeps only the original timestamp; should an edited thought also record an edit time?
+A1:",
+INIT-TL-0004,Thought Log,Thought Capture,Delete a thought,"As a user, I want to delete a thought, so that I can remove what I do not want kept",2,,INIT-TL-0001,"AC1: Given a thought, when I delete and confirm, then it no longer appears in the log
+AC2: Given I cancel the confirmation, when I look at the log, then the thought is still there
+AC3: Given the gist update fails, when I delete, then the thought stays and I see an error
+AC4: Given I delete a thought, when I confirm, then I am told the old text remains in the gist's version history on GitHub","GitHub keeps old versions of a gist, so deleted text stays readable there: only to the owner for a private gist, to anyone for a public one.",,
+INIT-TL-0005,Thought Log,Thought Capture,Tag a thought,"As a user, I want to add tags to a thought, so that I can find it later",3,,INIT-TL-0001,"AC1: Given a thought being written or edited, when I add a tag and save, then the tag is saved with the thought
+AC2: Given a tag that differs from an existing one only in letter case or surrounding spaces, when I add it, then it is treated as the same tag
+AC3: Given a tag longer than 30 characters, when I add it, then I am told it is too long and it is not added
+AC4: Given an empty tag, when I add it, then it is not added",,,
+INIT-TL-0006,Thought Log,Log Browsing,View thoughts as a log,"As a user, I want to read my thoughts newest first with date and time, like a git log, so that I can follow how my thinking moved",3,,INIT-SAA-0003,"AC1: Given several thoughts, when I open the log, then each shows its date, time, text and tags, newest first
+AC2: Given no thoughts, when I open the log, then I see an empty-log message
+AC3: Given more than 50 thoughts, when I open the log, then the first 50 show and I can load the next 50
+AC4: Given the gist cannot be read, when I open the log, then I see an error and a retry
+AC5: Given the log file is over 1 MB, when I open the log, then every thought still loads",Building against a stubbed gist is enough.,"Q1: Are the gist limits as recalled: a file read in full by the API up to about 1 MB, and through its raw link up to about 10 MB? To be verified in the first build.
+A1:",
+INIT-TL-0007,Thought Log,Log Browsing,Filter thoughts by tag,"As a user, I want to show only thoughts with a given tag, so that I can see one theme",2,,INIT-TL-0005,"AC1: Given a chosen tag, when I filter, then only thoughts with that tag show, newest first
+AC2: Given a tag with no thoughts, when I filter, then I see a nothing-found message
+AC3: Given more than 50 thoughts have the chosen tag, when I filter, then the first 50 show and I can load the next 50",,,
+INIT-TL-0008,Thought Log,Log Browsing,Search thoughts by text,"As a user, I want to search the text of my thoughts, so that I can find a half-remembered idea",2,,INIT-TL-0005,"AC1: Given a search word, when I search, then only thoughts containing it in any letter case, or tagged with it, show
+AC2: Given a search word with no match, when I search, then I see a nothing-found message
+AC3: Given I clear the search, when it clears, then the full log returns
+AC4: Given more than 50 thoughts match the search, when I search, then the first 50 show and I can load the next 50",,"Q1: Search also matches tags, which overlaps Filter thoughts by tag; should search match tags or only text?
+A1:",
