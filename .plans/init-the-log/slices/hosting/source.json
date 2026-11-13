@@ -1,0 +1,17 @@
+{
+  "scope": {
+    "type": "feature",
+    "epic": "Storage and Access",
+    "feature": "Hosting"
+  },
+  "stories": [
+    {
+      "id": "INIT-SAA-0001",
+      "title": "Open the log from GitHub Pages",
+      "hash": "5bf6e7daaebb",
+      "epic": "Storage and Access",
+      "feature": "Hosting"
+    }
+  ],
+  "drawnAt": "2026-11-11T08:52:21.134Z"
+}

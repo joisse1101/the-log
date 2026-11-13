@@ -150,4 +150,4 @@ sequenceDiagram
 
 | Slice | Scope | Date | Review | Stories | Commit |
 |---|---|---|---|---|---|
-| init-the-log/hosting | Feature: Hosting (Epic: Storage and Access) | 2026-11-11 | review: run | Open the log from GitHub Pages (5bf6e7daaebb) | `91fbf04f9e576b3a4ea45c62f0bc65c59ca987e4` |
+| init-the-log/hosting | Feature: Hosting (Epic: Storage and Access) | 2026-11-13 | review: run | Open the log from GitHub Pages (5bf6e7daaebb) | `6aaa5945d466538025938fbdd88ff9edfdeaecfc` |
