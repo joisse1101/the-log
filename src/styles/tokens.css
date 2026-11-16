@@ -1,0 +1,163 @@
+/*
+ * Design tokens for The Log.
+ * Layer 1 holds raw palette shades. Layer 2 maps them to roles with light-dark(light, dark).
+ * Components read only layer 2. Follows the OS theme; set data-theme="light" or "dark" on <html> to force one.
+ * Contrast of every text and fill pair was measured with the WCAG formula (see wiki/design/reference.md).
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Layer 1: palette ---- */
+
+  /* navy: dark-theme backgrounds */
+  --ui-navy-950: #0d1224;
+  --ui-navy-900: #131a31;
+  --ui-navy-800: #1b2543;
+  --ui-navy-700: #2a3860;
+
+  /* paper: light-theme backgrounds (warm off-white) */
+  --ui-paper-100: #faf8f5;
+  --ui-paper-200: #f3f0eb;
+  --ui-paper-300: #e8e3dc;
+  --ui-paper-400: #d6cfc5;
+
+  /* grey: all text, plus borders. Slightly cool so it sits with pink and blue. */
+  --ui-grey-100: #eceef2;
+  --ui-grey-200: #d9dce3;
+  --ui-grey-300: #bcc1cc;
+  --ui-grey-400: #9299a8;
+  --ui-grey-500: #747b8b;
+  --ui-grey-600: #5c6272;
+  --ui-grey-700: #444957;
+  --ui-grey-800: #2f333e;
+  --ui-grey-900: #1f222a;
+
+  /* pink: primary. 300 is the dark-theme pastel, 500 the light-theme dusky pink. */
+  --ui-pink-100: #fdf0f4;
+  --ui-pink-200: #fadde7;
+  --ui-pink-300: #f5c0d2;
+  --ui-pink-400: #ec9db8;
+  --ui-pink-500: #c2728a;
+  --ui-pink-550: #b96b83;
+  --ui-pink-700: #8f3f5a;
+  --ui-pink-800: #6e2e44;
+  --ui-pink-900: #4a1f2f;
+  --ui-pink-950: #2c1220;
+
+  /* blue: secondary. 300 is the dark-theme pastel, 500 the light-theme dusty blue. */
+  --ui-blue-100: #eef4fb;
+  --ui-blue-200: #dbe8f6;
+  --ui-blue-300: #b7d0ee;
+  --ui-blue-400: #92b4de;
+  --ui-blue-500: #6f8fb5;
+  --ui-blue-600: #587598;
+  --ui-blue-700: #435c7b;
+  --ui-blue-800: #314560;
+  --ui-blue-900: #222f43;
+
+  /* red: destructive actions only */
+  --ui-red-100: #fdecec;
+  --ui-red-300: #f2a3a3;
+  --ui-red-700: #9c3a3f;
+  --ui-red-900: #3a1215;
+
+  /* ---- Layer 2: roles (light, dark) ---- */
+
+  /* surfaces: a lighter surface reads as raised */
+  --ui-bg: light-dark(var(--ui-paper-200), var(--ui-navy-950));
+  --ui-surface: light-dark(var(--ui-paper-100), var(--ui-navy-900));
+  --ui-surface-raised: light-dark(var(--ui-paper-100), var(--ui-navy-800));
+  --ui-scrim: light-dark(rgb(31 34 42 / 0.45), rgb(5 8 18 / 0.7));
+
+  /* text: the only greys that may colour text */
+  --ui-text-primary: light-dark(var(--ui-grey-900), var(--ui-grey-100));
+  --ui-text-secondary: light-dark(var(--ui-grey-700), var(--ui-grey-300));
+  --ui-text-tertiary: light-dark(var(--ui-grey-600), var(--ui-grey-400));
+
+  /* borders: subtle is decoration; control meets 3:1 and marks a control's edge */
+  --ui-border: light-dark(var(--ui-paper-300), var(--ui-navy-800));
+  --ui-border-control: var(--ui-grey-500);
+
+  /* primary (pink) */
+  --ui-primary: light-dark(var(--ui-pink-500), var(--ui-pink-300));
+  --ui-primary-hover: light-dark(var(--ui-pink-400), var(--ui-pink-200));
+  --ui-primary-pressed: light-dark(var(--ui-pink-550), var(--ui-pink-400));
+  --ui-on-primary: var(--ui-pink-950);
+  --ui-primary-text: light-dark(var(--ui-pink-700), var(--ui-pink-300));
+
+  /* secondary (blue) */
+  --ui-secondary: light-dark(var(--ui-blue-200), var(--ui-blue-800));
+  --ui-secondary-hover: light-dark(var(--ui-blue-300), var(--ui-blue-700));
+  --ui-on-secondary: light-dark(var(--ui-blue-800), var(--ui-blue-200));
+  --ui-secondary-text: light-dark(var(--ui-blue-700), var(--ui-blue-300));
+
+  /* destructive */
+  --ui-danger: light-dark(var(--ui-red-700), var(--ui-red-300));
+  --ui-on-danger: light-dark(var(--ui-paper-100), var(--ui-red-900));
+
+  /* focus ring: solid, 3:1 on every surface */
+  --ui-focus: light-dark(var(--ui-blue-600), var(--ui-blue-300));
+
+  /* ---- Spacing ---- */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-5: 1.5rem;
+  --ui-space-6: 2rem;
+  --ui-space-7: 3rem;
+  --ui-space-8: 4rem;
+  --ui-space-9: 6rem;
+  --ui-space-10: 8rem;
+
+  /* ---- Radius: soft, to suit a relaxed product ---- */
+  --ui-radius-sm: 0.5rem;
+  --ui-radius-md: 0.75rem;
+  --ui-radius-lg: 1rem;
+  --ui-radius-xl: 1.5rem;
+  --ui-radius-full: 9999px;
+
+  /* ---- Type ---- */
+  --ui-font-text: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --ui-font-ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --ui-text-sm: 0.75rem;
+  --ui-text-base: 0.875rem;
+  --ui-text-lg: 1rem;
+  --ui-text-xl: 1.125rem;
+  --ui-text-2xl: 1.25rem;
+  --ui-text-3xl: 1.5rem;
+  --ui-text-4xl: 1.875rem;
+  --ui-text-5xl: 2.25rem;
+
+  --ui-weight-normal: 400;
+  --ui-weight-bold: 600;
+
+  --ui-leading-tight: 1.25;
+  --ui-leading-normal: 1.5;
+  --ui-leading-loose: 1.75;
+
+  /* ---- Shadow: five levels, tight shade plus soft shade. Dark theme leans on lighter surfaces for depth. */
+  --ui-shadow-base: light-dark(#1f222a, #04060f);
+  --ui-shadow-1: 0 1px 3px color-mix(in srgb, var(--ui-shadow-base) 14%, transparent),
+    0 1px 2px color-mix(in srgb, var(--ui-shadow-base) 26%, transparent);
+  --ui-shadow-2: 0 3px 6px color-mix(in srgb, var(--ui-shadow-base) 16%, transparent),
+    0 2px 4px color-mix(in srgb, var(--ui-shadow-base) 13%, transparent);
+  --ui-shadow-3: 0 10px 20px color-mix(in srgb, var(--ui-shadow-base) 16%, transparent),
+    0 3px 6px color-mix(in srgb, var(--ui-shadow-base) 11%, transparent);
+  --ui-shadow-4: 0 15px 25px color-mix(in srgb, var(--ui-shadow-base) 16%, transparent),
+    0 5px 10px color-mix(in srgb, var(--ui-shadow-base) 6%, transparent);
+  --ui-shadow-5: 0 20px 40px color-mix(in srgb, var(--ui-shadow-base) 22%, transparent);
+
+  /* ---- Motion ---- */
+  --ui-duration: 150ms;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

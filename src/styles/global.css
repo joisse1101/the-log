@@ -1,0 +1,44 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ui-bg);
+  color: var(--ui-text-primary);
+  font-family: var(--ui-font-ui);
+  font-size: var(--ui-text-base);
+  line-height: var(--ui-leading-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--ui-font-text);
+  font-weight: var(--ui-weight-bold);
+  line-height: var(--ui-leading-tight);
+}
+
+p {
+  margin: 0;
+  max-width: 65ch;
+}
+
+/* Page behind an open modal does not scroll */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

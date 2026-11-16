@@ -1,16 +1,17 @@
 .app-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-space-2);
   max-width: 40rem;
   margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: system-ui, sans-serif;
+  padding: var(--ui-space-6) var(--ui-space-4);
 }
 
 .app-shell__title {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
+  font-size: var(--ui-text-4xl);
 }
 
 .app-shell__placeholder {
-  margin: 0;
-  color: #555;
+  font-size: var(--ui-text-lg);
+  color: var(--ui-text-secondary);
 }
