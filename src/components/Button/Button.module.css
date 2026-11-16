@@ -1,0 +1,106 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  border: 0;
+  border-radius: var(--ui-radius-full);
+  font-family: var(--ui-font-ui);
+  font-weight: var(--ui-weight-bold);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.06em;
+  line-height: var(--ui-leading-tight);
+  cursor: pointer;
+  transition:
+    background-color var(--ui-duration),
+    box-shadow var(--ui-duration),
+    transform var(--ui-duration);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--ui-focus);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* sizes: small caps look smaller than lower case, so each step is one size above the body text */
+.sm {
+  padding: var(--ui-space-2) var(--ui-space-4);
+  font-size: var(--ui-text-base);
+}
+
+.md {
+  padding: var(--ui-space-3) var(--ui-space-5);
+  font-size: var(--ui-text-lg);
+}
+
+.lg {
+  padding: var(--ui-space-4) var(--ui-space-6);
+  font-size: var(--ui-text-xl);
+}
+
+/* primary: raised, so it gets the smallest shadow; pressing pushes it in */
+.primary {
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  box-shadow: var(--ui-shadow-1);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--ui-primary-hover);
+  box-shadow: var(--ui-shadow-2);
+}
+
+.primary:active:not(:disabled) {
+  background: var(--ui-primary-pressed);
+  box-shadow: none;
+  transform: translateY(1px);
+}
+
+/* secondary: quiet blue tint, no shadow */
+.secondary {
+  background: var(--ui-secondary);
+  color: var(--ui-on-secondary);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--ui-secondary-hover);
+}
+
+.secondary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* tertiary: looks like a link */
+.tertiary {
+  background: transparent;
+  color: var(--ui-primary-text);
+  padding-inline: var(--ui-space-3);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: transparent;
+}
+
+.tertiary:hover:not(:disabled) {
+  text-decoration-color: currentColor;
+}
+
+/* danger: bold and red, used for the confirming step only */
+.danger {
+  background: var(--ui-danger);
+  color: var(--ui-on-danger);
+  box-shadow: var(--ui-shadow-1);
+}
+
+.danger:hover:not(:disabled) {
+  box-shadow: var(--ui-shadow-2);
+}
+
+.danger:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(1px);
+}
