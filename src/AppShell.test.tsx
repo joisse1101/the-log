@@ -364,6 +364,26 @@ test('storing tags: editing the last line to "books, home" stores the tags [book
   expect(shownTags).toEqual(['#books', '#home'])
 })
 
+test('saving an unchanged edit keeps text "a\\n\\nb" with no tags', async () => {
+  await renderWithSeed({ ...SEEDED, text: 'a\n\nb', tags: [] })
+  await openEdit()
+  await saveDialog()
+
+  const [stored] = storedThoughts()
+  expect(stored.text).toBe('a\n\nb')
+  expect(stored.tags).toEqual([])
+})
+
+test('saving an unchanged edit keeps a thought with tags', async () => {
+  await renderWithSeed({ ...SEEDED, text: 'a\n\nb', tags: ['books', 'home'] })
+  await openEdit()
+  await saveDialog()
+
+  const [stored] = storedThoughts()
+  expect(stored.text).toBe('a\n\nb')
+  expect(stored.tags).toEqual(['books', 'home'])
+})
+
 test('tells the user the thought no longer exists and keeps the dialog open with the text', async () => {
   await renderWithSeed()
   await openEdit()
@@ -503,6 +523,23 @@ test.each(['not json {', '{}', 'null', '"x"', '{"thoughts":5}'])(
     expect(storage.items.get(THOUGHTS_ITEM)).toBe(corrupt)
   },
 )
+
+const BAD_ELEMENT_ITEMS = [
+  '5',
+  'null',
+  '"x"',
+  '{"id":"a","text":"One","tags":[],"editedAt":null}',
+  '{"id":"a","text":"One","tags":"books","createdAt":"2026-11-19T10:00:00.000Z","editedAt":null}',
+].map((element) => `{"version":1,"thoughts":[${element}]}`)
+
+test.each(BAD_ELEMENT_ITEMS)('renders an empty log and keeps the stored item when it holds %s', async (item) => {
+  storage.items.set(THOUGHTS_ITEM, item)
+  await renderAgain()
+
+  expect(container.querySelector('h1')?.textContent).toBe('The Log')
+  expect(shownTexts()).toEqual([])
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(item)
+})
 
 test('refuses to save over corrupt stored data, keeps the box text and leaves the item unchanged', async () => {
   storage.items.set(THOUGHTS_ITEM, 'not json {')

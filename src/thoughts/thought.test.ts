@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { createThought } from './thought'
+import { createThought, reviseThought, thoughtToEditText, type Thought } from './thought'
 
 const NOW = new Date('2026-11-19T10:15:00.000Z')
 
@@ -48,6 +48,44 @@ test('refuses a tag over 30 characters and accepts one of 30', () => {
 
   expect(createThought(`Hi\n\n${long}`, NOW)).toEqual({ ok: false, reason: 'tag-too-long', tag: long })
   expect(created(`Hi\n\n${'a'.repeat(30)}`).tags).toEqual(['a'.repeat(30)])
+})
+
+test('still reads the last line after several empty lines as tags without a #', () => {
+  const thought = created('Read tonight\n\n\nbooks, notes')
+
+  expect(thought.text).toBe('Read tonight')
+  expect(thought.tags).toEqual(['books', 'notes'])
+})
+
+test('reads an empty last line after an empty line as no tags and trims it from the text', () => {
+  const thought = created('a\n\nb\n\n')
+
+  expect(thought.text).toBe('a\n\nb')
+  expect(thought.tags).toEqual([])
+})
+
+test('shows a text with a last line after an empty line with an empty tags line', () => {
+  const thought: Thought = { ...created('x'), text: 'a\n\nb', tags: [] }
+
+  expect(thoughtToEditText(thought)).toBe('a\n\nb\n\n')
+})
+
+test.each([
+  ['a\n\nb', []],
+  ['a\n\nb\n\nc', []],
+  ['plain', []],
+  ['one\ntwo', []],
+  ['a\n\nb', ['t']],
+  ['Read tonight', ['books', 'notes']],
+])('round-trips text %j with tags %j through the edit text', (text, tags) => {
+  const thought: Thought = { ...created('x'), text, tags }
+
+  const revised = reviseThought(thought, thoughtToEditText(thought), NOW)
+
+  expect(revised.ok).toBe(true)
+  if (!revised.ok) return
+  expect(revised.thought.text).toBe(text)
+  expect(revised.thought.tags).toEqual(tags)
 })
 
 test.each(['', '   ', '\n \t'])('refuses blank text %j', (text) => {

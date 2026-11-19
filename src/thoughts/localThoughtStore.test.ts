@@ -89,6 +89,29 @@ test.each(CORRUPT_ITEMS)('add, replace and remove throw StorageWriteFailed and k
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(corrupt)
 })
 
+const BAD_ELEMENTS: Record<string, unknown> = {
+  'a number': 5,
+  null: null,
+  'a string': 'x',
+  'a missing createdAt': { id: 'a', text: 'One', tags: [], editedAt: null },
+  'tags that are not an array': { ...THOUGHT, tags: 'books' },
+  'a tag that is not a string': { ...THOUGHT, tags: [1] },
+  'an editedAt that is neither null nor a string': { ...THOUGHT, editedAt: 5 },
+}
+
+test.each(Object.entries(BAD_ELEMENTS))('treats a stored thought that is %s as unreadable', (_name, element) => {
+  const storage = new FakeStorage()
+  const item = JSON.stringify({ version: 1, thoughts: [THOUGHT, element] })
+  storage.items.set(THOUGHTS_ITEM, item)
+  const store = new LocalThoughtStore(storage)
+
+  expect(store.all()).toEqual([])
+  expect(() => store.add({ ...THOUGHT, id: 'b' })).toThrow(StorageWriteFailed)
+  expect(() => store.replace(THOUGHT)).toThrow(StorageWriteFailed)
+  expect(() => store.remove('a')).toThrow(StorageWriteFailed)
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(item)
+})
+
 test('add, replace and remove throw StorageWriteFailed and write nothing when getItem throws', () => {
   const storage = new FakeStorage()
   storage.items.set(THOUGHTS_ITEM, JSON.stringify({ version: 1, thoughts: [THOUGHT] }))

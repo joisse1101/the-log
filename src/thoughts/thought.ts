@@ -34,15 +34,28 @@ type ParseTextResult =
   | { ok: false; reason: 'blank' }
   | { ok: false; reason: 'tag-too-long'; tag: string }
 
-/** Splits off the last line as tags when an empty line comes before it, then parses the tags. */
+const LINE_BREAK = /\r?\n/
+
+function isTagsLinePosition(lines: string[]): boolean {
+  return lines.length >= 3 && lines[lines.length - 2].trim() === ''
+}
+
+/**
+ * Splits off the last line as tags when an empty line comes before it, then parses the tags.
+ * An empty last line after an empty line is an explicit "no tags" line, so a text that ends in
+ * a line after an empty line can be shown in the edit box and read back unchanged.
+ */
 export function parseThoughtText(raw: string): ParseTextResult {
   const trimmed = raw.trim()
   if (trimmed === '') {
     return { ok: false, reason: 'blank' }
   }
-  const lines = trimmed.split(/\r?\n/)
-  const hasTagsLine = lines.length >= 3 && lines[lines.length - 2].trim() === ''
-  if (!hasTagsLine) {
+  const rawLines = raw.trimStart().split(LINE_BREAK)
+  if (rawLines[rawLines.length - 1].trim() === '' && isTagsLinePosition(rawLines)) {
+    return { ok: true, text: rawLines.slice(0, -2).join('\n').trimEnd(), tags: [] }
+  }
+  const lines = trimmed.split(LINE_BREAK)
+  if (!isTagsLinePosition(lines)) {
     return { ok: true, text: trimmed, tags: [] }
   }
   const tags: string[] = []
@@ -58,9 +71,16 @@ export function parseThoughtText(raw: string): ParseTextResult {
   return { ok: true, text: lines.slice(0, -2).join('\n').trimEnd(), tags }
 }
 
-/** The text as the edit dialog shows it: the text, then the tags on a last line after an empty line. */
+/**
+ * The text as the edit dialog shows it: the text, then the tags on a last line after an empty line.
+ * Without tags, a text that would be read as having a tags line gets an empty tags line, so saving
+ * it unchanged keeps the text and its (empty) tags.
+ */
 export function thoughtToEditText(thought: Thought): string {
-  return thought.tags.length === 0 ? thought.text : `${thought.text}\n\n${thought.tags.join(', ')}`
+  if (thought.tags.length > 0) {
+    return `${thought.text}\n\n${thought.tags.join(', ')}`
+  }
+  return isTagsLinePosition(thought.text.split(LINE_BREAK)) ? `${thought.text}\n\n` : thought.text
 }
 
 /** Rule of the Thought aggregate: createdAt never changes; the new text and tags follow the same rules as create. */

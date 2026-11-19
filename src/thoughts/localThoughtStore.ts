@@ -15,8 +15,27 @@ interface StoredThoughts {
   thoughts: Thought[]
 }
 
+function isThought(value: unknown): value is Thought {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const thought = value as Record<string, unknown>
+  return (
+    typeof thought.id === 'string' &&
+    typeof thought.text === 'string' &&
+    typeof thought.createdAt === 'string' &&
+    (thought.editedAt === null || typeof thought.editedAt === 'string') &&
+    Array.isArray(thought.tags) &&
+    thought.tags.every((tag) => typeof tag === 'string')
+  )
+}
+
 function isStoredThoughts(value: unknown): value is StoredThoughts {
-  return typeof value === 'object' && value !== null && Array.isArray((value as { thoughts?: unknown }).thoughts)
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  const thoughts = (value as { thoughts?: unknown }).thoughts
+  return Array.isArray(thoughts) && thoughts.every(isThought)
 }
 
 export class LocalThoughtStore implements ThoughtStore {
