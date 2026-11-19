@@ -9,6 +9,7 @@
 | If you work on | Read first |
 | --- | --- |
 | Anything (start here) | [Home](wiki/Home.md) |
+| The home page: timeline, text box, markdown | [Timeline and markdown](wiki/thoughts/design.md) |
 
 Add one row per topic folder as `wiki/` grows.
 <!-- jois-init:docs end -->

@@ -321,12 +321,199 @@ textarea {
 }
 
 .log-list__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Markdown inside a card, as the Markdown reference shows it */
+.md > * {
   margin: 0;
-  max-width: 65ch;
+}
+
+.md p,
+.md ul,
+.md ol,
+.md table {
   font: 400 16px/1.75 var(--font-ui);
+  color: var(--text-secondary);
+}
+
+.md p,
+.md blockquote {
+  max-width: 65ch;
+}
+
+.md h2 {
+  font: var(--text-heading);
+  color: var(--text-primary);
+}
+
+.md h3 {
+  font: var(--text-card-title);
+  color: var(--text-primary);
+}
+
+.md h4 {
+  font: 600 18px/1.25 var(--font-text);
+  color: var(--text-primary);
+}
+
+.md h5 {
+  font: 600 16px/1.25 var(--font-text);
+  color: var(--text-primary);
+}
+
+.md h6 {
+  font: 600 14px/1.25 var(--font-text);
+  color: var(--text-secondary);
+}
+
+.md p.md-h6 {
+  font: italic 400 14px/1.25 var(--font-text);
+  color: var(--text-tertiary);
+}
+
+.md strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.md s {
+  color: var(--text-tertiary);
+}
+
+.md a {
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.md a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.md code {
+  font: 400 14px/1.6 Consolas, "Courier New", monospace;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+
+.md blockquote {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  font: italic 400 18px/1.75 var(--font-text);
+  color: var(--text-secondary);
+}
+
+.md blockquote > * {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  max-width: none;
+}
+
+.md ul,
+.md ol {
+  padding-left: 24px;
+}
+
+.md ul {
+  list-style-type: disc;
+}
+
+.md ul ul,
+.md ol ul {
+  list-style-type: circle;
+}
+
+.md li + li {
+  margin-top: var(--space-1);
+}
+
+.md li.md-task {
+  list-style: none;
+}
+
+.md .md-tasks {
+  list-style: none;
+  padding-left: 0;
+}
+
+.md-task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.md-task input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.md-task__text--done {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.md-task__more {
+  flex-basis: 100%;
+}
+
+.md pre {
+  box-sizing: border-box;
+  padding: var(--space-4);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.md pre code {
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
   color: var(--text-secondary);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.md table {
+  width: 100%;
+  border-collapse: collapse;
+  line-height: 1.5;
+}
+
+.md th,
+.md td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.md th {
+  font: 600 14px/1.5 var(--font-ui);
+  color: var(--text-primary);
+  border-bottom-color: var(--border-control);
+}
+
+.md hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border-control);
+  margin: var(--space-2) 0;
 }
 
 .log-list__tags {

@@ -1,5 +1,6 @@
 import { formatThoughtTime } from './formatThoughtTime'
 import type { Thought } from './thought'
+import { ThoughtMarkdown } from './ThoughtMarkdown'
 
 interface LogListProps {
   thoughts: Thought[]
@@ -7,7 +8,7 @@ interface LogListProps {
   onDelete: (thought: Thought) => void
 }
 
-/** Thought text is rendered as text, never as HTML. */
+/** Thought text is rendered as markdown elements, never as HTML. */
 export function LogList({ thoughts, onEdit, onDelete }: LogListProps) {
   const now = new Date()
   return (
@@ -51,7 +52,7 @@ export function LogList({ thoughts, onEdit, onDelete }: LogListProps) {
               </button>
             </div>
           </div>
-          <p className="log-list__text">{thought.text}</p>
+          <ThoughtMarkdown className="log-list__text md" text={thought.text} />
           {thought.tags.length > 0 && (
             <ul className="log-list__tags" aria-label="Tags">
               {thought.tags.map((tag) => (
