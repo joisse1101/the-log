@@ -44,18 +44,22 @@
 
 ## keep-unsaved-thought
 
-- [ ] T-thought-capture-unsaved-restore Keep typed text and restore it on reopen
+- [x] T-thought-capture-unsaved-restore Keep typed text and restore it on reopen
   Satisfies: AC-thought-capture-unsaved-reopen (steps 1.1, 1.2, 1.3, 1.7, 2.1, 2.2, 2.3, 2.4, 2.5)
   Verify: Type "Half a thought" without saving; item the-log:unsaved-thought holds it. Unmount and render the app again with the same stubbed storage; the box shows "Half a thought".
-- [ ] T-thought-capture-unsaved-after-failure Keep the text after a failed save so the user can retry
+  result: npx vitest run -> 6 files, 42 tests passed; npx tsc --noEmit -p . -> no errors; python scripts/check_docs.py -> passed
+- [x] T-thought-capture-unsaved-after-failure Keep the text after a failed save so the user can retry
   Satisfies: AC-thought-capture-unsaved-save-fails (steps 3.1, 3.2, 3.3, 3.4)
   Verify: Type "Retry me", make the thoughts write throw and save; the box and item the-log:unsaved-thought still hold "Retry me" (failure response "Save fails while text is kept"). Let the write succeed and save again; the thought is stored.
-- [ ] T-thought-capture-unsaved-clear Clear the kept text after a successful save
+  result: npx vitest run -> 6 files, 42 tests passed; npx tsc --noEmit -p . -> no errors; python scripts/check_docs.py -> passed
+- [x] T-thought-capture-unsaved-clear Clear the kept text after a successful save
   Satisfies: AC-thought-capture-unsaved-cleared (steps 3.1, 3.2, 3.5, 3.6, 3.7)
   Verify: Type "Done" and save; item the-log:unsaved-thought is removed, and rendering the app again shows an empty box.
-- [ ] T-thought-capture-unsaved-blocked Keep working when the browser blocks keeping text
+  result: npx vitest run -> 6 files, 42 tests passed; npx tsc --noEmit -p . -> no errors; python scripts/check_docs.py -> passed
+- [x] T-thought-capture-unsaved-blocked Keep working when the browser blocks keeping text
   Satisfies: AC-thought-capture-unsaved-blocked (steps 1.4, 1.5, 1.6)
   Verify: Stub setItem for the-log:unsaved-thought to throw a SecurityError and type several letters; "This browser can't keep unsaved text. Save before you close the tab." shows exactly once (failure response "Unsaved text cannot be kept"), and saving still stores the thought.
+  result: npx vitest run -> 6 files, 42 tests passed; npx tsc --noEmit -p . -> no errors; python scripts/check_docs.py -> passed
 
 ## edit-thought
 

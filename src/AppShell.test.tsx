@@ -5,6 +5,7 @@ import AppShell from './AppShell'
 import { FakeStorage } from './test/fakeStorage'
 import { THOUGHTS_ITEM } from './thoughts/localThoughtStore'
 import type { Thought } from './thoughts/thought'
+import { UNSAVED_ITEM } from './thoughts/unsavedThoughtStore'
 
 let container: HTMLDivElement
 let root: Root
@@ -185,6 +186,70 @@ test('refuses a 31-character tag, keeps the text and stores nothing; a 30-charac
   await saveWithShiftEnter()
 
   expect(storedThoughts()[0].tags).toEqual(['c'.repeat(30)])
+})
+
+test('keeps typed text in the-log:unsaved-thought and restores it when the app is rendered again', async () => {
+  await type('Half a thought')
+
+  expect(storage.items.get(UNSAVED_ITEM)).toBe('Half a thought')
+
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+
+  expect(box().value).toBe('Half a thought')
+})
+
+test('keeps the text in the box and the kept item after a failed save, and saves on retry', async () => {
+  await type('Retry me')
+  storage.failWrites = true
+  await saveWithShiftEnter()
+
+  expect(box().value).toBe('Retry me')
+  expect(storage.items.get(UNSAVED_ITEM)).toBe('Retry me')
+  expect(storage.items.has(THOUGHTS_ITEM)).toBe(false)
+
+  storage.failWrites = false
+  await saveWithShiftEnter()
+
+  expect(storedThoughts().map((thought) => thought.text)).toEqual(['Retry me'])
+})
+
+test('clears the kept text after a successful save and shows an empty box on reopen', async () => {
+  await type('Done')
+  await saveWithShiftEnter()
+
+  expect(storage.items.has(UNSAVED_ITEM)).toBe(false)
+
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+
+  expect(box().value).toBe('')
+})
+
+test('says once that unsaved text cannot be kept and still saves', async () => {
+  storage.blockedItems.add(UNSAVED_ITEM)
+  const message = "This browser can't keep unsaved text. Save before you close the tab."
+
+  await type('a')
+  await type('ab')
+  await type('abc')
+
+  const notices = [...container.querySelectorAll('[role="status"]')].filter((node) => node.textContent === message)
+  expect(notices).toHaveLength(1)
+
+  await saveWithShiftEnter()
+
+  expect(storedThoughts().map((thought) => thought.text)).toEqual(['abc'])
 })
 
 test('shows text as plain text, not HTML', async () => {
