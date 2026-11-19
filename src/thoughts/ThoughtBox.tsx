@@ -71,15 +71,24 @@ export function ThoughtBox({ service, unsaved, onSaved }: ThoughtBoxProps) {
 
   return (
     <div className="thought-box">
-      <textarea
-        ref={boxRef}
-        className="thought-box__input"
-        aria-label="Thought"
-        placeholder="Write a thought"
-        value={text}
-        onChange={(event) => handleInput(event.target.value)}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="thought-field">
+        <textarea
+          ref={boxRef}
+          className="thought-field__input thought-box__input"
+          aria-label="Thought"
+          aria-describedby="thought-box-hint"
+          placeholder="Write a thought"
+          value={text}
+          onChange={(event) => {
+            handleInput(event.target.value)
+            setError(null)
+          }}
+          onKeyDown={handleKeyDown}
+        />
+        <span id="thought-box-hint" className="thought-field__hint">
+          Shift + ⏎ to save
+        </span>
+      </div>
       {keepBlocked && (
         <p className="thought-box__notice" role="status">
           {KEEP_BLOCKED_MESSAGE}
@@ -90,9 +99,11 @@ export function ThoughtBox({ service, unsaved, onSaved }: ThoughtBoxProps) {
           {error}
         </p>
       )}
-      <button type="button" className="thought-box__save" onClick={save}>
-        Save
-      </button>
+      <div className="thought-box__actions">
+        <button type="button" className="button button--primary thought-box__save" onClick={save}>
+          Save
+        </button>
+      </div>
     </div>
   )
 }
