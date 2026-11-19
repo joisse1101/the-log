@@ -1,9 +1,24 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
-import type { Thought } from './thought'
-import type { ThoughtService } from './thoughtService'
+import { MAX_TAG_LENGTH, type Thought } from './thought'
+import type { SaveResult, ThoughtService } from './thoughtService'
 
 export const BLANK_MESSAGE = 'A thought needs some text.'
 export const STORAGE_MESSAGE = "Couldn't save your thought. Your text is still in the box."
+
+export function tagTooLongMessage(tag: string): string {
+  return `Tag “${tag}” is too long (${MAX_TAG_LENGTH} characters at most).`
+}
+
+function failureMessage(failure: Exclude<SaveResult, { ok: true }>): string {
+  switch (failure.reason) {
+    case 'blank':
+      return BLANK_MESSAGE
+    case 'tag-too-long':
+      return tagTooLongMessage(failure.tag)
+    case 'storage':
+      return STORAGE_MESSAGE
+  }
+}
 
 interface ThoughtBoxProps {
   service: ThoughtService
@@ -18,7 +33,7 @@ export function ThoughtBox({ service, onSaved }: ThoughtBoxProps) {
   function save() {
     const result = service.write(text)
     if (!result.ok) {
-      setError(result.reason === 'blank' ? BLANK_MESSAGE : STORAGE_MESSAGE)
+      setError(failureMessage(result))
       return
     }
     setError(null)

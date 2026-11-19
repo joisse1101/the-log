@@ -16,6 +16,15 @@ export function LogList({ thoughts }: LogListProps) {
             {formatThoughtTime(thought.createdAt, now)}
           </time>
           <p className="log-list__text">{thought.text}</p>
+          {thought.tags.length > 0 && (
+            <ul className="log-list__tags">
+              {thought.tags.map((tag) => (
+                <li key={tag} className="log-list__tag">
+                  #{tag}
+                </li>
+              ))}
+            </ul>
+          )}
         </li>
       ))}
     </ul>

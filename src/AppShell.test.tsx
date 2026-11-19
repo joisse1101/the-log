@@ -150,6 +150,43 @@ test('offers no place choice and makes no network request when saving', async ()
   expect(fetchSpy).not.toHaveBeenCalled()
 })
 
+test('saves tags from the last line and shows #books and #notes on the card', async () => {
+  await type('Read tonight\n\nbooks, notes')
+  await saveWithShiftEnter()
+
+  expect(storedThoughts()[0].text).toBe('Read tonight')
+  expect(storedThoughts()[0].tags).toEqual(['books', 'notes'])
+  expect(shownTexts()).toEqual(['Read tonight'])
+  const shownTags = [...container.querySelectorAll('.log-list__tag')].map((node) => node.textContent)
+  expect(shownTags).toEqual(['#books', '#notes'])
+})
+
+test('stores one tag for "Books,  books , #BOOKS" and drops empty tags', async () => {
+  await type('One\n\nBooks,  books , #BOOKS')
+  await saveWithShiftEnter()
+  await type('Two\n\nbooks, , ,notes')
+  await saveWithShiftEnter()
+
+  expect(storedThoughts().map((thought) => thought.tags)).toEqual([['books'], ['books', 'notes']])
+})
+
+test('refuses a 31-character tag, keeps the text and stores nothing; a 30-character tag saves', async () => {
+  const long = 'c'.repeat(31)
+  await type(`Hi\n\n${long}`)
+  await saveWithShiftEnter()
+
+  expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+    `Tag “${long}” is too long (30 characters at most).`,
+  )
+  expect(box().value).toBe(`Hi\n\n${long}`)
+  expect(storage.items.has(THOUGHTS_ITEM)).toBe(false)
+
+  await type(`Hi\n\n${'c'.repeat(30)}`)
+  await saveWithShiftEnter()
+
+  expect(storedThoughts()[0].tags).toEqual(['c'.repeat(30)])
+})
+
 test('shows text as plain text, not HTML', async () => {
   await type('<b>bold</b>')
   await saveWithShiftEnter()

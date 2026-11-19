@@ -4,6 +4,7 @@ import { StorageWriteFailed, type ThoughtStore } from './thoughtStore'
 export type SaveResult =
   | { ok: true; thought: Thought }
   | { ok: false; reason: 'blank' | 'storage' }
+  | { ok: false; reason: 'tag-too-long'; tag: string }
 
 export class ThoughtService {
   constructor(
