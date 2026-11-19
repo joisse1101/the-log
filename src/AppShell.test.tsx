@@ -91,11 +91,16 @@ test('saves with the Save button', async () => {
   expect(shownTexts()).toEqual(['By button'])
 })
 
-test('empties the box, keeps focus and puts the next thought above the first', async () => {
+test('empties the box, folds it, puts focus on the hint and puts the next thought above the first', async () => {
   await type('First thought')
   await saveWithShiftEnter()
 
   expect(box().value).toBe('')
+  expect(document.activeElement).toBe(container.querySelector('.fold-hint'))
+
+  await act(async () => {
+    container.querySelector<HTMLButtonElement>('.fold-hint')?.click()
+  })
   expect(document.activeElement).toBe(box())
 
   await type('Second')
@@ -104,11 +109,11 @@ test('empties the box, keeps focus and puts the next thought above the first', a
   expect(shownTexts()).toEqual(['Second', 'First thought'])
 })
 
-test('keeps focus in the box after saving with the Save button', async () => {
+test('puts focus on the hint after saving with the Save button', async () => {
   await type('First thought')
   await saveWithButton()
 
-  expect(document.activeElement).toBe(box())
+  expect(document.activeElement).toBe(container.querySelector('.fold-hint'))
 })
 
 test.each(['', '   '])('refuses blank text %j and leaves the stored item unchanged', async (text) => {

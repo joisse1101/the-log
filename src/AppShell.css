@@ -32,11 +32,176 @@ textarea {
 
 /* Page */
 .app-shell {
+  /* The tallest the box gets before it goes tall: what is left once the header, Save and a message
+     under the box, and about one card of timeline, are given their room. */
+  --box-reserve: 360px;
+  --timeline-floor: 120px;
+  --box-cap: max(160px, calc(100dvh - var(--box-reserve) - var(--timeline-floor)));
+  height: 100dvh;
   margin: 0 auto;
-  padding: var(--space-7) var(--space-4) var(--space-8);
+  padding: var(--space-7) var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-7);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Tall: the text has outgrown the box, so the box fills the screen above Save. The header goes
+   and the timeline is out of view below, with its scroll position kept. */
+.app-shell--tall {
+  padding-top: var(--space-4);
+  gap: var(--space-3);
+}
+
+.app-shell--tall .app-shell__header {
+  display: none;
+}
+
+.app-shell--tall .timeline {
+  flex: 0 0 0;
+  margin-top: calc(-1 * var(--space-3));
+  padding-bottom: 0;
+  visibility: hidden;
+}
+
+.app-shell--tall .thought-box,
+.app-shell--tall .thought-field {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell--tall .thought-field__input {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+
+/* Folded: the header is out of the way and the box is a one-line hint above the timeline */
+.app-shell--folded {
+  padding-top: var(--space-4);
+  gap: var(--space-3);
+}
+
+.app-shell--folded .app-shell__header {
+  display: none;
+}
+
+.fold-hint {
+  flex: none;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-full);
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.fold-hint:hover {
+  color: var(--text-secondary);
+}
+
+.fold-hint:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Timeline: its own scrolling area. An edge fades out where more logs wait, and the scrollbar is half see-through. */
+.timeline {
+  --fade-top-size: 0px;
+  --fade-bottom-size: 0px;
+  flex: 1 1 0;
+  min-height: 0;
+  /* The bar sits in the page margin, as the artboard's bar overlays the content: the cards
+     line up with the box, and nothing jumps when the log is short enough to need no bar. */
+  margin-right: -9px;
+  scrollbar-gutter: stable;
+  padding-bottom: var(--space-1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top-size), #000 calc(100% - var(--fade-bottom-size)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top-size), #000 calc(100% - var(--fade-bottom-size)), transparent 100%);
+}
+
+.timeline--fade-top {
+  --fade-top-size: 32px;
+}
+
+.timeline--fade-bottom {
+  --fade-bottom-size: 32px;
+}
+
+/*
+ * Scrollbar of the timeline: a 5px thumb, 2px from the edge, radius 3px, border-control at 50%,
+ * 8px in from the top and bottom. The thumb carries a 2px transparent border on every side, so
+ * its box is 9px wide, its radius is 5px (3px once the border is taken off) and the track keeps
+ * 6px of margin (8px less the border).
+ */
+.app-shell::-webkit-scrollbar,
+.timeline::-webkit-scrollbar {
+  width: 9px;
+}
+
+.app-shell::-webkit-scrollbar-track,
+.timeline::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+.app-shell::-webkit-scrollbar-thumb,
+.timeline::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border-control) 50%, transparent);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+
+/* Scrollbar of the text box: a 6px thumb, 4px from the edge, radius 3px, border-control, 10px in from the ends */
+.thought-field__input::-webkit-scrollbar {
+  width: 14px;
+}
+
+.thought-field__input::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+.thought-field__input::-webkit-scrollbar-thumb {
+  background: var(--border-control);
+  background-clip: padding-box;
+  border: 4px solid transparent;
+  border-radius: 7px;
+}
+
+/* Firefox has no ::-webkit-scrollbar: the closest it offers is a thin bar in the same colours */
+@supports (-moz-appearance: none) {
+  .app-shell,
+  .timeline {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--border-control) 50%, transparent) transparent;
+  }
+
+  .thought-field__input {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-control) transparent;
+  }
+}
+
+/* With no entries yet the box is taller */
+.app-shell--empty {
+  --timeline-floor: 0px;
+}
+
+.app-shell--empty .thought-box .thought-field__input {
+  min-height: min(380px, var(--box-cap));
 }
 
 .app-shell__header {
@@ -64,14 +229,56 @@ textarea {
   }
 }
 
-/* Phone: the Save button sits full width under the box */
+/* Phone: the Save button sits full width under the box; cards are tighter and have no rail */
 @media (max-width: 39.999rem) {
-  .thought-box__actions {
+  .app-shell {
+    --box-reserve: 340px;
+    padding-top: var(--space-6);
+    gap: var(--space-6);
+  }
+
+  .app-shell--folded,
+  .app-shell--tall {
+    padding-top: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .app-shell .thought-box__actions {
     justify-content: stretch;
   }
 
-  .thought-box__save {
+  .app-shell .thought-box__save {
     flex: 1;
+    min-height: 48px;
+  }
+
+  .app-shell .thought-box .thought-field__input {
+    min-height: min(200px, var(--box-cap));
+    padding: var(--space-4) var(--space-4) var(--space-7);
+  }
+
+  .app-shell--empty .thought-box .thought-field__input {
+    min-height: min(380px, var(--box-cap));
+  }
+
+  .app-shell .log-list {
+    gap: var(--space-4);
+  }
+
+  .app-shell .log-list__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell .log-list__rail {
+    display: none;
+  }
+
+  .app-shell .log-list__item {
+    padding: var(--space-4);
+  }
+
+  .app-shell .log-list__header {
+    margin: -12px -8px -12px 0;
   }
 }
 
@@ -161,6 +368,10 @@ textarea {
 }
 
 /* Thought box and the edit box share one look */
+.thought-box[hidden] {
+  display: none;
+}
+
 .thought-box {
   display: flex;
   flex-direction: column;
@@ -179,7 +390,7 @@ textarea {
 .thought-field__input {
   display: block;
   width: 100%;
-  min-height: 220px;
+  min-height: min(220px, var(--box-cap));
   padding: var(--space-5) var(--space-5) var(--space-7);
   resize: none;
   background: var(--surface);
@@ -193,7 +404,8 @@ textarea {
   overflow-wrap: anywhere;
   field-sizing: content;
   /* Grows with the text, then stops at the screen height and scrolls inside. */
-  max-height: calc(100dvh - 44px - var(--space-4) * 3);
+  /* Leaves room for the header, the Save button and a message under the box, so the page never needs its own scroll. */
+  max-height: var(--box-cap);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -632,7 +844,7 @@ textarea {
   margin: 0;
   font: var(--text-meta);
   color: var(--text-secondary);
-  white-space: pre-wrap;
+  white-space: pre-line;
   overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;

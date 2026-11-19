@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import { MAX_TAG_LENGTH, type Thought } from './thought'
 import type { SaveResult, ThoughtService } from './thoughtService'
 import { KeepBlocked, type UnsavedThoughtStore } from './unsavedThoughtStore'
@@ -27,13 +27,38 @@ interface ThoughtBoxProps {
   service: ThoughtService
   unsaved: UnsavedThoughtStore
   onSaved: (thought: Thought) => void
+  /** The box is folded away, but keeps its text. */
+  folded: boolean
+  inputRef: RefObject<HTMLTextAreaElement | null>
+  /** The text has outgrown the normal box, so the box fills the screen. */
+  tall: boolean
+  onTallChange: (tall: boolean) => void
 }
 
-export function ThoughtBox({ service, unsaved, onSaved }: ThoughtBoxProps) {
+export function ThoughtBox({ service, unsaved, onSaved, folded, inputRef, tall, onTallChange }: ThoughtBoxProps) {
   const [text, setText] = useState(() => unsaved.restore())
   const [error, setError] = useState<string | null>(null)
   const [keepBlocked, setKeepBlocked] = useState(false)
-  const boxRef = useRef<HTMLTextAreaElement>(null)
+
+  // The box goes tall when its text overflows the normal cap, and leaves tall only when the text
+  // is no taller than the box was at that moment, so deleting one line does not flicker.
+  const tallAt = useRef(0)
+  useLayoutEffect(() => {
+    const input = inputRef.current
+    if (input === null || folded) return
+    if (!tall) {
+      if (input.scrollHeight > input.clientHeight + 1) {
+        tallAt.current = input.clientHeight
+        onTallChange(true)
+      }
+      return
+    }
+    // While tall the box is stretched, so read the height its text alone needs.
+    input.style.flex = 'none'
+    const textHeight = input.offsetHeight
+    input.style.flex = ''
+    if (textHeight <= tallAt.current) onTallChange(false)
+  }, [text, folded, tall, inputRef, onTallChange])
 
   function runKeeping(action: () => void) {
     try {
@@ -59,7 +84,6 @@ export function ThoughtBox({ service, unsaved, onSaved }: ThoughtBoxProps) {
     setText('')
     runKeeping(() => unsaved.clear())
     onSaved(result.thought)
-    boxRef.current?.focus()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -70,10 +94,10 @@ export function ThoughtBox({ service, unsaved, onSaved }: ThoughtBoxProps) {
   }
 
   return (
-    <div className="thought-box">
+    <div className="thought-box" hidden={folded}>
       <div className="thought-field">
         <textarea
-          ref={boxRef}
+          ref={inputRef}
           className="thought-field__input thought-box__input"
           aria-label="Thought"
           aria-describedby="thought-box-hint"
