@@ -55,7 +55,7 @@ function box(): HTMLTextAreaElement {
 }
 
 function hint(): HTMLButtonElement | null {
-  return container.querySelector<HTMLButtonElement>('.fold-hint')
+  return container.querySelector<HTMLButtonElement>('.collapse:not([inert]) .fold-hint')
 }
 
 /** jsdom does not scroll, so give the timeline a scrollTop that holds what was set. */
@@ -95,7 +95,7 @@ test('puts the box on top and the log in its own scrolling area, with no hint at
   await openApp(STORED)
 
   expect(timeline().querySelectorAll('.log-list__item')).toHaveLength(2)
-  expect(box().closest('.thought-box')?.hasAttribute('hidden')).toBe(false)
+  expect(box().closest('.collapse')?.hasAttribute('inert')).toBe(false)
   expect(hint()).toBeNull()
 })
 
@@ -106,7 +106,7 @@ test('folds the box into the hint "Drag down to write a log" when the timeline s
   await scrollTimeline(40)
 
   expect(hint()?.textContent).toBe('↓ Drag down to write a log')
-  expect(box().closest('.thought-box')?.hasAttribute('hidden')).toBe(true)
+  expect(box().closest('.collapse')?.hasAttribute('inert')).toBe(true)
   expect(container.querySelector('main')?.classList.contains('app-shell--folded')).toBe(true)
 })
 
@@ -232,7 +232,7 @@ test('keeps the box open when the browser moves scrollTop because the timeline c
   await scrollTimeline(2296)
 
   expect(hint()).toBeNull()
-  expect(box().closest('.thought-box')?.hasAttribute('hidden')).toBe(false)
+  expect(box().closest('.collapse')?.hasAttribute('inert')).toBe(false)
 })
 
 test('keeps the box open when the content gets shorter and the browser lowers scrollTop', async () => {
@@ -272,9 +272,47 @@ test('ignores a scroll right after a size change, and folds the box on a real sc
     expect(hint()).toBeNull()
 
     await act(async () => {
-      vi.advanceTimersByTime(200)
+      vi.advanceTimersByTime(400)
     })
     await scrollTimeline(80)
+    expect(hint()).not.toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('ignores scrolls for the whole of an unfold animation, then folds on a real scroll', async () => {
+  vi.useFakeTimers({ toFake: ['performance'] })
+  try {
+    await openApp(STORED)
+    trackScroll(timeline())
+    await scrollTimeline(40)
+    await act(async () => {
+      vi.advanceTimersByTime(400)
+    })
+    expect(hint()).not.toBeNull()
+
+    await act(async () => {
+      hint()?.click()
+    })
+    expect(hint()).toBeNull()
+
+    // The browser moves scrollTop during the animation, with the size unchanged between events.
+    await act(async () => {
+      vi.advanceTimersByTime(150)
+    })
+    await scrollTimeline(60)
+    expect(hint()).toBeNull()
+    await act(async () => {
+      vi.advanceTimersByTime(100)
+    })
+    await scrollTimeline(80)
+    expect(hint()).toBeNull()
+
+    await act(async () => {
+      vi.advanceTimersByTime(300)
+    })
+    await scrollTimeline(120)
     expect(hint()).not.toBeNull()
   } finally {
     vi.useRealTimers()

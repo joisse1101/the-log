@@ -1,5 +1,20 @@
 @import './styles/tokens.css';
 
+/*
+ * Motion: every duration and easing of the home page is here, in one place.
+ * --motion-fold    the text box folding into the hint, and the hint opening back into the box (height and fade)
+ * --motion-grow    the text box growing or shrinking line by line
+ * --motion-scroll  the timeline scrolling to the top after a save
+ * --motion-ease    the curve used by the fold and the growing box (the scroll uses an ease-out curve in code)
+ * Set a duration to 0ms to switch that motion off. The reduced-motion rule at the end of this file does so for all.
+ */
+:root {
+  --motion-fold: 320ms;
+  --motion-grow: 160ms;
+  --motion-scroll: 400ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 *,
 *::before,
 *::after {
@@ -30,63 +45,66 @@ textarea {
   border: 0;
 }
 
-/* Page */
+/* Page: the header and the box on top, the timeline below. The page scrolls when the open box is
+   tall; folded, the page fits the screen and only the timeline scrolls. */
 .app-shell {
-  /* The tallest the box gets before it goes tall: what is left once the header, Save and a message
-     under the box, and about one card of timeline, are given their room. */
-  --box-reserve: 360px;
-  --timeline-floor: 120px;
-  --box-cap: max(160px, calc(100dvh - var(--box-reserve) - var(--timeline-floor)));
+  --page-x: 48px;
+  --page-pad-top: var(--space-7);
+  --page-pad-bottom: var(--space-5);
+  --page-gap: var(--space-7);
+  /* The box grows with its text until it is as tall as the screen less the page's own padding. */
+  --box-cap: calc(100dvh - var(--page-pad-top) - var(--page-pad-bottom));
+  --timeline-min: 240px;
   height: 100dvh;
   margin: 0 auto;
-  padding: var(--space-7) var(--space-4) var(--space-5);
+  padding: var(--page-pad-top) calc(var(--page-x) - 9px) var(--page-pad-bottom);
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
+  /* The page's scrollbar takes room on both sides, so nothing moves when it appears. */
+  scrollbar-gutter: stable both-edges;
   overflow-x: hidden;
   overflow-y: auto;
+  transition: padding-top var(--motion-fold) var(--motion-ease);
 }
 
-/* Tall: the text has outgrown the box, so the box fills the screen above Save. The header goes
-   and the timeline is out of view below, with its scroll position kept. */
-.app-shell--tall {
-  padding-top: var(--space-4);
-  gap: var(--space-3);
+/* Shows or hides a part of the page by animating its height (a grid row from 1fr to 0fr) and its fade */
+.collapse {
+  flex: none;
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-bottom: var(--collapse-gap);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--motion-fold) var(--motion-ease),
+    margin-bottom var(--motion-fold) var(--motion-ease),
+    opacity var(--motion-fold) var(--motion-ease),
+    visibility 0s;
 }
 
-.app-shell--tall .app-shell__header {
-  display: none;
-}
-
-.app-shell--tall .timeline {
-  flex: 0 0 0;
-  margin-top: calc(-1 * var(--space-3));
-  padding-bottom: 0;
+.collapse[data-open='false'] {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
   visibility: hidden;
+  transition:
+    grid-template-rows var(--motion-fold) var(--motion-ease),
+    margin-bottom var(--motion-fold) var(--motion-ease),
+    opacity var(--motion-fold) var(--motion-ease),
+    visibility 0s linear var(--motion-fold);
 }
 
-.app-shell--tall .thought-box,
-.app-shell--tall .thought-field {
-  flex: 1 1 auto;
+/* The padding and the matching negative margin leave room for focus rings inside the clip */
+.collapse__inner {
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-shell--tall .thought-field__input {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: none;
+  margin: -6px;
+  padding: 6px;
+  overflow: hidden;
 }
 
 /* Folded: the header is out of the way and the box is a one-line hint above the timeline */
 .app-shell--folded {
   padding-top: var(--space-4);
-  gap: var(--space-3);
-}
-
-.app-shell--folded .app-shell__header {
-  display: none;
 }
 
 .fold-hint {
@@ -119,11 +137,13 @@ textarea {
   --fade-top-size: 0px;
   --fade-bottom-size: 0px;
   flex: 1 1 0;
-  min-height: 0;
+  min-height: var(--timeline-min);
   /* The bar sits in the page margin, as the artboard's bar overlays the content: the cards
      line up with the box, and nothing jumps when the log is short enough to need no bar. */
   margin-right: -9px;
   scrollbar-gutter: stable;
+  /* The page keeps the reading card in place itself while the box opens (keepInView.ts). */
+  overflow-anchor: none;
   padding-bottom: var(--space-1);
   overflow-x: hidden;
   overflow-y: auto;
@@ -196,10 +216,6 @@ textarea {
 }
 
 /* With no entries yet the box is taller */
-.app-shell--empty {
-  --timeline-floor: 0px;
-}
-
 .app-shell--empty .thought-box .thought-field__input {
   min-height: min(380px, var(--box-cap));
 }
@@ -222,25 +238,16 @@ textarea {
   color: var(--text-tertiary);
 }
 
-@media (min-width: 40rem) {
-  .app-shell {
-    padding-right: 48px;
-    padding-left: 48px;
-  }
-}
-
 /* Phone: the Save button sits full width under the box; cards are tighter and have no rail */
 @media (max-width: 39.999rem) {
   .app-shell {
-    --box-reserve: 340px;
-    padding-top: var(--space-6);
-    gap: var(--space-6);
+    --page-x: var(--space-4);
+    --page-pad-top: var(--space-6);
+    --page-gap: var(--space-6);
   }
 
-  .app-shell--folded,
-  .app-shell--tall {
+  .app-shell--folded {
     padding-top: var(--space-4);
-    gap: var(--space-3);
   }
 
   .app-shell .thought-box__actions {
@@ -414,12 +421,25 @@ textarea {
   max-height: none;
 }
 
+/* The new-thought box is sized by script from its text, so that its height can be animated */
+.thought-box__input {
+  field-sizing: fixed;
+  transition: height var(--motion-grow) var(--motion-ease);
+}
+
 .edit-dialog .thought-field__input {
   box-shadow: none;
 }
 
 .edit-dialog .thought-field__hint {
   right: var(--space-5);
+}
+
+.thought-box__input {
+  /* Keeps the caret line clear of the "Shift + Enter to save" hint at the foot of the box. */
+  scroll-padding-block-end: var(--space-7);
+  /* When the page scrolls the box into view, its focus ring stays on screen. */
+  scroll-margin-block: var(--space-3);
 }
 
 .thought-field__input::placeholder {
@@ -867,6 +887,15 @@ textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fold: 0ms;
+    --motion-grow: 0ms;
+    --motion-scroll: 0ms;
+  }
+
+  .collapse,
+  .app-shell,
+  .thought-box__input,
   .button,
   .icon-button,
   .log-list__item {

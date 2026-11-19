@@ -2,14 +2,22 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './AppShell.css'
 import { DeleteThoughtDialog } from './thoughts/DeleteThoughtDialog'
 import { EditThoughtDialog } from './thoughts/EditThoughtDialog'
+import { Collapse } from './thoughts/Collapse'
 import { rememberBottomCard } from './thoughts/keepInView'
 import { LocalThoughtStore } from './thoughts/localThoughtStore'
 import { LogList } from './thoughts/LogList'
+import { animateScrollTop, readMotionMs } from './thoughts/motion'
 import type { Thought } from './thoughts/thought'
 import { ThoughtBox } from './thoughts/ThoughtBox'
 import { ThoughtService } from './thoughts/thoughtService'
 import { Timeline } from './thoughts/Timeline'
 import { UnsavedThoughtStore } from './thoughts/unsavedThoughtStore'
+
+/** How long a fold takes where the stylesheet gives no `--motion-fold`. */
+const FOLD_FALLBACK_MS = 320
+
+/** Extra time after an animation during which a scroll in the timeline is still not the user's. */
+const ANIMATION_SLACK_MS = 80
 
 export default function AppShell() {
   const service = useMemo(() => new ThoughtService(new LocalThoughtStore(localStorage)), [])
@@ -21,17 +29,29 @@ export default function AppShell() {
   const opener = useRef<HTMLElement | null>(null)
   const returnFocus = useRef(false)
   const [folded, setFolded] = useState(false)
-  const [tall, setTall] = useState(false)
   const timeline = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLTextAreaElement>(null)
   const hint = useRef<HTMLButtonElement>(null)
   const focusAfterFold = useRef<'box' | 'hint' | null>(null)
-  const keepInView = useRef<(() => void) | null>(null)
+  const shell = useRef<HTMLElement>(null)
+  const keepInView = useRef<((ms?: number) => () => void) | null>(null)
+  const stopKeeping = useRef<(() => void) | null>(null)
+  const animatingUntil = useRef(0)
+  const firstRender = useRef(true)
 
-  // When the box opens the timeline gets shorter: keep the card that was at its bottom in view.
+  // Folding or opening the box animates the timeline's height. Until that is over, a scroll in
+  // the timeline is the browser's, not the user's; and while the box opens, the card that was at
+  // the bottom of the timeline is kept in view frame by frame.
   useLayoutEffect(() => {
-    if (folded) return
-    keepInView.current?.()
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    const ms = readMotionMs(shell.current, '--motion-fold', FOLD_FALLBACK_MS)
+    animatingUntil.current = performance.now() + ms + ANIMATION_SLACK_MS
+    stopKeeping.current?.()
+    stopKeeping.current = null
+    if (!folded) stopKeeping.current = keepInView.current?.(ms) ?? null
     keepInView.current = null
   }, [folded])
 
@@ -77,31 +97,37 @@ export default function AppShell() {
     setThoughts((current) => [thought, ...current])
     focusAfterFold.current = 'hint'
     setFolded(true)
-    setTall(false)
-    if (timeline.current !== null) timeline.current.scrollTop = 0
+    if (timeline.current !== null) {
+      animateScrollTop(timeline.current, 0, readMotionMs(shell.current, '--motion-scroll', 0))
+    }
   }
 
   const classes = ['app-shell']
   if (folded) classes.push('app-shell--folded')
-  if (tall && !folded) classes.push('app-shell--tall')
   if (thoughts.length === 0) classes.push('app-shell--empty')
 
   return (
-    <main className={classes.join(' ')}>
-      <header className="app-shell__header">
-        <h1 ref={heading} tabIndex={-1} className="app-shell__title">The Log</h1>
-        <p className="app-shell__tagline">Write it down. Come back to it later.</p>
-      </header>
-      {folded && (
+    <main ref={shell} className={classes.join(' ')}>
+      <Collapse open={!folded} gap="var(--page-gap)">
+        <header className="app-shell__header">
+          <h1 ref={heading} tabIndex={-1} className="app-shell__title">The Log</h1>
+          <p className="app-shell__tagline">Write it down. Come back to it later.</p>
+        </header>
+      </Collapse>
+      <Collapse open={folded} gap="var(--space-3)">
         <button ref={hint} type="button" className="fold-hint" onClick={openBox}>
           ↓ Drag down to write a log
         </button>
-      )}
-      <ThoughtBox service={service} unsaved={unsaved} onSaved={saved} folded={folded} inputRef={box} tall={tall} onTallChange={setTall} />
-      <Timeline scrollRef={timeline} onScrolled={() => {
-          setFolded(true)
-          setTall(false)
-        }} onPullDown={() => folded && unfold()}>
+      </Collapse>
+      <Collapse open={!folded} gap="var(--page-gap)">
+        <ThoughtBox service={service} unsaved={unsaved} onSaved={saved} folded={folded} inputRef={box} />
+      </Collapse>
+      <Timeline
+        scrollRef={timeline}
+        onScrolled={() => setFolded(true)}
+        onPullDown={() => folded && unfold()}
+        isAnimating={() => performance.now() < animatingUntil.current}
+      >
         <LogList
           thoughts={thoughts}
           onEdit={(thought) => openDialog(() => setEditing(thought))}

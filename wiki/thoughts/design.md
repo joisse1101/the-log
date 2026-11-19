@@ -1,24 +1,42 @@
 # Thought capture: timeline and markdown
 
-How the home page lays out the text box and the log, and how a thought's text is shown. The design source is the Thought Capture page of the design canvas (artboards "Browse and write", "Markdown reference", "Home with entries" and "Home on a phone").
+How the home page lays out the text box and the log, and how a thought's text is shown. The design source is the Thought Capture page of the design canvas (artboards "Browse and write", "Typing interaction" for the growing box, "Markdown reference", "Home with entries" and "Home on a phone"; the last two are titled "Log home with entries" and "Log home on a phone" inside their files).
 
 ## The timeline
 
-- The log is the timeline: its own scrolling area below the text box, apart from the page (`src/thoughts/Timeline.tsx`). It fills the rest of the screen. While the box is not tall it keeps room for about one card (120px).
+- The log is the timeline: its own scrolling area below the text box, apart from the page (`src/thoughts/Timeline.tsx`). It fills the rest of the screen. While the box is open it is never shorter than 240px (about two cards).
 - Scrolling the timeline away from its top folds the text box (and the page header) into a one-line button, "Drag down to write a log". The box keeps its text while folded.
-- The box opens again when the user presses that button, wheels up at the top of the timeline, or drags down at the top on a touch screen. Opening keeps the log the user was reading in view: the card that sat at the bottom of the view stays at the bottom after the box opens (`src/thoughts/keepInView.ts`). Only a scroll the user makes folds the box; a scroll the browser makes because the timeline changed size does not.
-- Saving is the only thing that moves the timeline for the user: it scrolls to the top, the box empties and folds, and focus goes to the hint button.
+- The box opens again when the user presses that button, wheels up at the top of the timeline, or drags down at the top on a touch screen. Opening keeps the log the user was reading in view: the card that sat at the bottom of the view stays at the bottom while and after the box opens (`src/thoughts/keepInView.ts`). Only a scroll the user makes folds the box; a scroll the browser makes because the timeline changed size does not.
+- Saving is the only thing that moves the timeline for the user: it scrolls smoothly to the top, the box empties and folds, and focus goes to the hint button.
 - The top edge fades out when the timeline is scrolled down, the bottom edge when more logs wait below (a 32px mask, set in `src/AppShell.css`).
 - The scrollbar thumb of the timeline is 5px wide, 2px from the edge, round, 8px in from the top and bottom, in `--border-control` at 50% opacity. The thumb of the text box is 6px wide, 4px from the edge, round, 10px in from the ends, in `--border-control`. Firefox shows a thin bar in the same colours.
 - The hint button is 44px tall for touch size, a deliberate difference from the 36px of the artboard.
 - On a laptop each card has a dot and a line on its left (the first dot is pink). On a phone the rail is hidden and the cards are tighter.
 - Not built yet, they belong to other slices: the tag filter chips, search, "show more" paging and the 100-entry cap, card titles, and the "Saved" toast.
 
-## The tall box
+## The text box and the page
 
-- The box grows with its text up to a cap: the screen height less the header, the Save button, a message line and about one card (120px) of timeline.
-- When the text overflows that cap the box goes tall (`app-shell--tall`, set from `src/thoughts/ThoughtBox.tsx`). The header goes, the timeline is collapsed out of view below (its scroll position is kept), and the box fills the screen above Save. The text scrolls inside the box, and the page itself never scrolls. A message under the box stays in view.
-- The box leaves the tall state only when its text is no taller than the box was at the moment it went tall, so deleting one line does not flicker. Saving and folding also end it. The box keeps its focus and caret throughout.
+- The box grows with its text, line by line, until it is as tall as the screen (the screen height less the page's own top and bottom padding). After that its text scrolls inside the box, with the styled bar. The height is set from the text by script (`src/thoughts/ThoughtBox.tsx`) so that it can be animated.
+- While the box is open the page itself scrolls when the content is taller than the screen: a big box pushes the header out of view, and the user scrolls the page down to reach Save, any message under the box, and the timeline. The timeline is never shorter than 240px (about two cards) there. Nothing is hidden or locked.
+- Scrolling the page never folds the box. Only a scroll inside the timeline does.
+- Folded, the page fits the screen and only the timeline scrolls.
+- The page scrollbar looks like the timeline's. The page reserves room for its bar on both sides, so nothing moves when it appears.
+- The caret stays on screen: when it is at the end of the text, the box is scrolled into view once it has grown. Focus is kept throughout.
+
+## Motion
+
+Every duration and the easing are custom properties at the top of `src/AppShell.css`. Change them there; a duration of `0ms` switches that motion off.
+
+| Property | Default | What it times |
+| --- | --- | --- |
+| `--motion-fold` | `320ms` | The box folding into the hint and the hint opening back into the box (height and fade), with the header and the timeline following. |
+| `--motion-grow` | `160ms` | The text box growing or shrinking as text is typed or deleted. |
+| `--motion-scroll` | `400ms` | The timeline scrolling to the top after a save. The scroll uses an ease-out curve set in `src/thoughts/motion.ts`. |
+| `--motion-ease` | `cubic-bezier(0.4, 0, 0.2, 1)` | The curve of the fold and the growing box. |
+
+- Under `prefers-reduced-motion: reduce` the three durations are `0ms`, so nothing animates.
+- While the box opens, the card that sat at the bottom of the timeline is held in place frame by frame (`src/thoughts/keepInView.ts`), so the log being read does not jump.
+- The timeline ignores scroll events for the length of the fold (plus 80ms) and for 150ms after any size change, because the browser may move `scrollTop` while the layout animates. Only a scroll the user makes outside those windows folds the box.
 
 ## Markdown
 

@@ -12,6 +12,8 @@ interface TimelineProps {
   onScrolled: () => void
   /** Called when the user drags or wheels down while the timeline is at its top. */
   onPullDown: () => void
+  /** True while the page is animating the box open or shut: a scroll then is not the user's. */
+  isAnimating: () => boolean
   children: ReactNode
 }
 
@@ -19,7 +21,7 @@ interface TimelineProps {
  * The scrolling area that holds the log. Its top or bottom edge fades out where more logs wait
  * to be scrolled to.
  */
-export function Timeline({ scrollRef, onScrolled, onPullDown, children }: TimelineProps) {
+export function Timeline({ scrollRef, onScrolled, onPullDown, isAnimating, children }: TimelineProps) {
   const [fades, setFades] = useState({ top: false, bottom: false })
   const touchStart = useRef<number | null>(null)
   const lastSize = useRef({ client: 0, content: 0 })
@@ -76,7 +78,7 @@ export function Timeline({ scrollRef, onScrolled, onPullDown, children }: Timeli
     measure()
     const area = scrollRef.current
     if (area === null) return
-    const resized = noteSize() || performance.now() - resizedAt.current < RESIZE_SCROLL_WINDOW_MS
+    const resized = noteSize() || isAnimating() || performance.now() - resizedAt.current < RESIZE_SCROLL_WINDOW_MS
     if (!resized && area.scrollTop > 0) onScrolled()
   }
 

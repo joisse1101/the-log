@@ -147,7 +147,7 @@ test('offers no place choice and makes no network request when saving', async ()
   vi.stubGlobal('fetch', fetchSpy)
 
   expect(container.querySelector('select, input[type="radio"], input[type="checkbox"]')).toBeNull()
-  expect([...container.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Save'])
+  expect([...container.querySelectorAll('button')].filter((b) => !b.closest('[inert]')).map((b) => b.textContent)).toEqual(['Save'])
 
   await type('Here')
   await saveWithShiftEnter()
