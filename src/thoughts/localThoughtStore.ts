@@ -27,8 +27,16 @@ export class LocalThoughtStore implements ThoughtStore {
     return stored.thoughts
   }
 
+  get(id: string): Thought | undefined {
+    return this.all().find((thought) => thought.id === id)
+  }
+
   add(thought: Thought): void {
     this.write([...this.all(), thought])
+  }
+
+  replace(thought: Thought): void {
+    this.write(this.all().map((stored) => (stored.id === thought.id ? thought : stored)))
   }
 
   private write(thoughts: Thought[]): void {

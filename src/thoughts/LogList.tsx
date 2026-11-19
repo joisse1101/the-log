@@ -3,10 +3,11 @@ import type { Thought } from './thought'
 
 interface LogListProps {
   thoughts: Thought[]
+  onEdit: (thought: Thought) => void
 }
 
 /** Thought text is rendered as text, never as HTML. */
-export function LogList({ thoughts }: LogListProps) {
+export function LogList({ thoughts, onEdit }: LogListProps) {
   const now = new Date()
   return (
     <ul className="log-list">
@@ -25,6 +26,9 @@ export function LogList({ thoughts }: LogListProps) {
               ))}
             </ul>
           )}
+          <button type="button" className="log-list__edit" onClick={() => onEdit(thought)}>
+            Edit
+          </button>
         </li>
       ))}
     </ul>

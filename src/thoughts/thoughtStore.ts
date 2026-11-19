@@ -10,5 +10,8 @@ export class StorageWriteFailed extends Error {
 
 export interface ThoughtStore {
   all(): Thought[]
+  /** Reads the store again, so a thought removed by another tab is not found. */
+  get(id: string): Thought | undefined
   add(thought: Thought): void
+  replace(thought: Thought): void
 }

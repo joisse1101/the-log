@@ -61,3 +61,43 @@ test('list returns thoughts newest first', () => {
 
   expect(service.list().map((thought) => thought.text)).toEqual(['Newer', 'Older'])
 })
+
+test('edit keeps createdAt, sets editedAt to now and returns the revised thought', () => {
+  const { service, setNow } = setup()
+  const written = service.write('Before')
+  if (!written.ok) throw new Error('write failed')
+  setNow(new Date('2026-11-20T08:00:00.000Z'))
+
+  const result = service.edit(written.thought.id, 'After')
+
+  expect(result.ok).toBe(true)
+  const [stored] = service.list()
+  expect(stored.text).toBe('After')
+  expect(stored.createdAt).toBe('2026-11-19T10:00:00.000Z')
+  expect(stored.editedAt).toBe('2026-11-20T08:00:00.000Z')
+})
+
+test('edit returns not-found when the thought is not stored', () => {
+  const { service } = setup()
+
+  expect(service.edit('missing', 'Text')).toEqual({ ok: false, reason: 'not-found' })
+})
+
+test('edit returns blank and leaves the thought unchanged for blank text', () => {
+  const { service } = setup()
+  const written = service.write('Before')
+  if (!written.ok) throw new Error('write failed')
+
+  expect(service.edit(written.thought.id, '  ')).toEqual({ ok: false, reason: 'blank' })
+  expect(service.list()[0].text).toBe('Before')
+})
+
+test('edit returns storage and leaves the thought unchanged when the write fails', () => {
+  const { storage, service } = setup()
+  const written = service.write('Before')
+  if (!written.ok) throw new Error('write failed')
+  storage.failWrites = true
+
+  expect(service.edit(written.thought.id, 'After')).toEqual({ ok: false, reason: 'storage' })
+  expect(service.list()[0].text).toBe('Before')
+})

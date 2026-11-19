@@ -259,3 +259,142 @@ test('shows text as plain text, not HTML', async () => {
   expect(container.querySelector('.log-list__text b')).toBeNull()
   expect(shownTexts()).toEqual(['<b>bold</b>'])
 })
+
+const SEEDED: Thought = {
+  id: 'seed-1',
+  text: 'Original',
+  tags: ['books'],
+  createdAt: '2026-11-13T19:30:00.000Z',
+  editedAt: null,
+}
+
+async function renderWithSeed(thought: Thought = SEEDED) {
+  storage.items.set(THOUGHTS_ITEM, JSON.stringify({ version: 1, thoughts: [thought] }))
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+}
+
+function button(label: string): HTMLButtonElement {
+  const found = [...container.querySelectorAll('button')].find((b) => b.textContent === label)
+  if (found === undefined) throw new Error(`${label} button not found`)
+  return found
+}
+
+function dialogBox(): HTMLTextAreaElement {
+  const found = container.querySelector<HTMLTextAreaElement>('.edit-dialog textarea')
+  if (found === null) throw new Error('edit dialog not found')
+  return found
+}
+
+async function openEdit() {
+  await act(async () => {
+    button('Edit').click()
+  })
+}
+
+async function typeInDialog(text: string) {
+  const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+  await act(async () => {
+    setValue?.call(dialogBox(), text)
+    dialogBox().dispatchEvent(new Event('input', { bubbles: true }))
+  })
+}
+
+async function saveDialog() {
+  const save = [...container.querySelectorAll('.edit-dialog button')].find((b) => b.textContent === 'Save')
+  if (save === undefined) throw new Error('dialog Save button not found')
+  await act(async () => {
+    ;(save as HTMLButtonElement).click()
+  })
+}
+
+function dialogAlert(): string | undefined {
+  return container.querySelector('.edit-dialog [role="alert"]')?.textContent ?? undefined
+}
+
+test('opens Edit with the text, its tags line and the note that the time stays', async () => {
+  await renderWithSeed()
+  await openEdit()
+
+  expect(dialogBox().value).toBe('Original\n\nbooks')
+  expect(container.querySelector('.edit-dialog__time')?.textContent).toMatch(/^Written .+\. The time stays as it is\.$/)
+})
+
+test('edits a thought: the card shows the new text with the original time and editedAt is set', async () => {
+  await renderWithSeed()
+  const timeBefore = container.querySelector('.log-list__time')?.textContent
+  await openEdit()
+  await typeInDialog('Fixed')
+  await saveDialog()
+
+  expect(shownTexts()).toEqual(['Fixed'])
+  expect(container.querySelector('.log-list__time')?.textContent).toBe(timeBefore)
+  expect(container.querySelector('.edit-dialog')).toBeNull()
+  const [stored] = storedThoughts()
+  expect(stored.text).toBe('Fixed')
+  expect(stored.createdAt).toBe(SEEDED.createdAt)
+  expect(stored.editedAt).not.toBeNull()
+  expect(Math.abs(Date.now() - new Date(stored.editedAt ?? '').getTime())).toBeLessThan(60_000)
+})
+
+test('saves an edit with Shift + Enter in the dialog', async () => {
+  await renderWithSeed()
+  await openEdit()
+  await typeInDialog('Fixed')
+  await act(async () => {
+    dialogBox().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, cancelable: true }))
+  })
+
+  expect(shownTexts()).toEqual(['Fixed'])
+})
+
+test('storing tags: editing the last line to "books, home" stores the tags [books, home]', async () => {
+  await renderWithSeed({ ...SEEDED, tags: [] })
+  await openEdit()
+  await typeInDialog('Original\n\nbooks, home')
+  await saveDialog()
+
+  expect(storedThoughts()[0].tags).toEqual(['books', 'home'])
+  const shownTags = [...container.querySelectorAll('.log-list__tag')].map((node) => node.textContent)
+  expect(shownTags).toEqual(['#books', '#home'])
+})
+
+test('tells the user the thought no longer exists and keeps the dialog open with the text', async () => {
+  await renderWithSeed()
+  await openEdit()
+  storage.items.delete(THOUGHTS_ITEM)
+  await typeInDialog('Changed')
+  await saveDialog()
+
+  expect(dialogAlert()).toBe('This thought no longer exists.')
+  expect(dialogBox().value).toBe('Changed')
+})
+
+test('keeps the dialog and the stored thought when the storage write fails on edit', async () => {
+  await renderWithSeed()
+  await openEdit()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  storage.failWrites = true
+  await typeInDialog('Changed')
+  await saveDialog()
+
+  expect(dialogAlert()).toBe("Couldn't save your thought. Your text is still in the box.")
+  expect(dialogBox().value).toBe('Changed')
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
+
+test('refuses a blank edit and leaves the stored thought unchanged', async () => {
+  await renderWithSeed()
+  await openEdit()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  await typeInDialog('   ')
+  await saveDialog()
+
+  expect(dialogAlert()).toBe('A thought needs some text.')
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})

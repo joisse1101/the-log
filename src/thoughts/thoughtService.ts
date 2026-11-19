@@ -1,10 +1,12 @@
-import { createThought, type Thought } from './thought'
+import { createThought, reviseThought, type Thought } from './thought'
 import { StorageWriteFailed, type ThoughtStore } from './thoughtStore'
 
 export type SaveResult =
   | { ok: true; thought: Thought }
   | { ok: false; reason: 'blank' | 'storage' }
   | { ok: false; reason: 'tag-too-long'; tag: string }
+
+export type EditResult = SaveResult | { ok: false; reason: 'not-found' }
 
 export class ThoughtService {
   constructor(
@@ -26,6 +28,26 @@ export class ThoughtService {
       throw error
     }
     return { ok: true, thought: created.thought }
+  }
+
+  edit(id: string, text: string): EditResult {
+    const stored = this.store.get(id)
+    if (stored === undefined) {
+      return { ok: false, reason: 'not-found' }
+    }
+    const revised = reviseThought(stored, text, this.now())
+    if (!revised.ok) {
+      return revised
+    }
+    try {
+      this.store.replace(revised.thought)
+    } catch (error: unknown) {
+      if (error instanceof StorageWriteFailed) {
+        return { ok: false, reason: 'storage' }
+      }
+      throw error
+    }
+    return { ok: true, thought: revised.thought }
   }
 
   /** Local thoughts, newest first. */

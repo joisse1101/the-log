@@ -58,6 +58,23 @@ export function parseThoughtText(raw: string): ParseTextResult {
   return { ok: true, text: lines.slice(0, -2).join('\n').trimEnd(), tags }
 }
 
+/** The text as the edit dialog shows it: the text, then the tags on a last line after an empty line. */
+export function thoughtToEditText(thought: Thought): string {
+  return thought.tags.length === 0 ? thought.text : `${thought.text}\n\n${thought.tags.join(', ')}`
+}
+
+/** Rule of the Thought aggregate: createdAt never changes; the new text and tags follow the same rules as create. */
+export function reviseThought(thought: Thought, text: string, now: Date): CreateThoughtResult {
+  const parsed = parseThoughtText(text)
+  if (!parsed.ok) {
+    return parsed
+  }
+  return {
+    ok: true,
+    thought: { ...thought, text: parsed.text, tags: parsed.tags, editedAt: now.toISOString() },
+  }
+}
+
 /** Rule of the Thought aggregate: text is never blank, tags are unique and 1 to 30 characters. */
 export function createThought(text: string, now: Date): CreateThoughtResult {
   const parsed = parseThoughtText(text)

@@ -25,10 +25,10 @@
 
 ## tag-thought
 
-- [ ] T-thought-capture-tag-save Read tags from the last line and save them with the thought
+- [x] T-thought-capture-tag-save Read tags from the last line and save them with the thought
   Satisfies: AC-thought-capture-tag-saved (steps 1.1, 1.2, 1.3, 1.4, 1.9, 1.10, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6)
   Verify: Save "Read tonight", an empty line, then "books, notes"; the stored thought has text "Read tonight" and tags [books, notes], and the card shows #books and #notes. Edit that thought's last line to "books, home" and save; the stored tags become [books, home].
-  result: npm test -- --run -> 5 files, 34 tests passed; npx tsc -b -> clean; save side checked by tests ("Read tonight", an empty line, "books, notes" gives text "Read tonight", tags [books, notes], #books #notes on the card); edit-side check unverified until edit-thought exists
+  result: npm test -> 53 passed, 0 failed; save side: "Read tonight", an empty line, "books, notes" stores text "Read tonight" and tags [books, notes], card shows #books #notes; edit side: test "storing tags: editing the last line to \"books, home\" stores the tags [books, home]" passes
 - [x] T-thought-capture-tag-normalise Treat tags that differ only in case or spaces as one tag
   Satisfies: AC-thought-capture-tag-same (steps 1.4, 1.9, 1.10)
   Verify: Save a thought whose tags line is "Books,  books , #BOOKS"; it is stored with the single tag books.
@@ -63,18 +63,22 @@
 
 ## edit-thought
 
-- [ ] T-thought-capture-edit-save Edit a thought and keep its original time
+- [x] T-thought-capture-edit-save Edit a thought and keep its original time
   Satisfies: AC-thought-capture-edit-saved (steps 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.8, 2.9, 2.13, 3.1, 3.2, 3.7, 3.8, 3.9, 3.10)
   Verify: Seed one thought created at 2026-11-13T19:30Z; open Edit, change the text to "Fixed" and save; the card shows "Fixed" with the original time, and the stored thought keeps createdAt and has editedAt set to now.
-- [ ] T-thought-capture-edit-gone Tell the user the thought no longer exists
+  result: npx tsc --noEmit -p . -> no errors; npm test -> 53 passed, 0 failed; test "edits a thought: the card shows the new text with the original time and editedAt is set" passes
+- [x] T-thought-capture-edit-gone Tell the user the thought no longer exists
   Satisfies: AC-thought-capture-edit-gone (steps 2.5, 2.6, 2.7)
   Verify: Open Edit on a seeded thought, then remove it from item the-log:thoughts as another tab would, and save; "This thought no longer exists." shows (failure response "Edited thought is gone") and the dialog stays open with the text.
-- [ ] T-thought-capture-edit-storage-fails Keep the change when the storage write fails
+  result: npm test -> 53 passed; test "tells the user the thought no longer exists and keeps the dialog open with the text" passes
+- [x] T-thought-capture-edit-storage-fails Keep the change when the storage write fails
   Satisfies: AC-thought-capture-edit-save-fails (steps 3.3, 3.4, 3.5, 3.6)
   Verify: Open Edit, change the text, make setItem throw and save; "Couldn't save your thought. Your text is still in the box." shows (failure response "Storage write fails on edit"), the dialog stays open with the change and the stored thought is unchanged.
-- [ ] T-thought-capture-edit-blank Refuse a blank edit
+  result: npm test -> 53 passed; test "keeps the dialog and the stored thought when the storage write fails on edit" passes
+- [x] T-thought-capture-edit-blank Refuse a blank edit
   Satisfies: AC-thought-capture-edit-blank (steps 2.10, 2.11, 2.12)
   Verify: Open Edit, clear all the text and save; "A thought needs some text." shows (failure response "Blank text on edit") and the stored thought is unchanged.
+  result: npm test -> 53 passed; test "refuses a blank edit and leaves the stored thought unchanged" passes
 
 ## delete-thought
 

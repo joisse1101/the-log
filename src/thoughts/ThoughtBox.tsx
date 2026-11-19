@@ -12,7 +12,7 @@ export function tagTooLongMessage(tag: string): string {
   return `Tag “${tag}” is too long (${MAX_TAG_LENGTH} characters at most).`
 }
 
-function failureMessage(failure: Exclude<SaveResult, { ok: true }>): string {
+export function failureMessage(failure: Exclude<SaveResult, { ok: true }>): string {
   switch (failure.reason) {
     case 'blank':
       return BLANK_MESSAGE
