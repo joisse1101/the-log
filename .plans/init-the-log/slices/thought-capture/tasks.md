@@ -97,6 +97,7 @@
   Satisfies: AC-thought-capture-device-log (steps 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7)
   Verify: Seed three thoughts created today 09:41, yesterday 21:15 and on Sun 15 Nov 22:10; the log shows them in that order as "Today, 09:41", "Yesterday, 21:15" and "Sun 15 Nov, 22:10", each with its text and tags; a thought whose text is "<b>hi</b>" shows those characters literally (rule "rendered as text, never as HTML"); with the item missing the log shows no thoughts and no error; a time stored in UTC shows in the local time zone set for the test (rule "stored in UTC and shown in local time").
   result: npx vitest run src/thoughts/openLog.test.tsx -> 5 passed, 0 failed; npx tsc --noEmit -p . -> exit 0, no errors; python scripts/check_docs.py -> docs check passed
-- [ ] T-thought-capture-test-slice Run the project's tests for the whole slice and fix what fails
+- [x] T-thought-capture-test-slice Run the project's tests for the whole slice and fix what fails
   Satisfies: AC-thought-capture-device-log (steps 1.6, 1.7)
   Verify: `npm run typecheck` and `npm test` both exit 0, covering every task of every flow in this slice, and `npm run build` exits 0.
+  result: npm run typecheck -> exit code 0; npm test -> exit code 0 (7 files, 106 tests passed); npm run build -> exit code 0
