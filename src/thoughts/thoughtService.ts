@@ -8,6 +8,8 @@ export type SaveResult =
 
 export type EditResult = SaveResult | { ok: false; reason: 'not-found' }
 
+export type DeleteResult = { ok: true } | { ok: false; reason: 'storage' }
+
 export class ThoughtService {
   constructor(
     private readonly store: ThoughtStore,
@@ -48,6 +50,18 @@ export class ThoughtService {
       throw error
     }
     return { ok: true, thought: revised.thought }
+  }
+
+  delete(id: string): DeleteResult {
+    try {
+      this.store.remove(id)
+    } catch (error: unknown) {
+      if (error instanceof StorageWriteFailed) {
+        return { ok: false, reason: 'storage' }
+      }
+      throw error
+    }
+    return { ok: true }
   }
 
   /** Local thoughts, newest first. */

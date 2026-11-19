@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import './AppShell.css'
+import { DeleteThoughtDialog } from './thoughts/DeleteThoughtDialog'
 import { EditThoughtDialog } from './thoughts/EditThoughtDialog'
 import { LocalThoughtStore } from './thoughts/localThoughtStore'
 import { LogList } from './thoughts/LogList'
@@ -13,6 +14,7 @@ export default function AppShell() {
   const unsaved = useMemo(() => new UnsavedThoughtStore(localStorage), [])
   const [thoughts, setThoughts] = useState<Thought[]>(() => service.list())
   const [editing, setEditing] = useState<Thought | null>(null)
+  const [deleting, setDeleting] = useState<Thought | null>(null)
 
   return (
     <main className="app-shell">
@@ -22,7 +24,16 @@ export default function AppShell() {
         unsaved={unsaved}
         onSaved={(thought) => setThoughts((current) => [thought, ...current])}
       />
-      <LogList thoughts={thoughts} onEdit={setEditing} />
+      <LogList thoughts={thoughts} onEdit={setEditing} onDelete={setDeleting} />
+      {deleting !== null && (
+        <DeleteThoughtDialog
+          key={deleting.id}
+          service={service}
+          thought={deleting}
+          onDeleted={(id) => setThoughts((current) => current.filter((thought) => thought.id !== id))}
+          onClose={() => setDeleting(null)}
+        />
+      )}
       {editing !== null && (
         <EditThoughtDialog
           key={editing.id}

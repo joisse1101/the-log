@@ -39,6 +39,10 @@ export class LocalThoughtStore implements ThoughtStore {
     this.write(this.all().map((stored) => (stored.id === thought.id ? thought : stored)))
   }
 
+  remove(id: string): void {
+    this.write(this.all().filter((stored) => stored.id !== id))
+  }
+
   private write(thoughts: Thought[]): void {
     const stored: StoredThoughts = { version: ITEM_VERSION, thoughts }
     try {

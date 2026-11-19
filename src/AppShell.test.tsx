@@ -398,3 +398,86 @@ test('refuses a blank edit and leaves the stored thought unchanged', async () =>
   expect(dialogAlert()).toBe('A thought needs some text.')
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
 })
+
+const SECOND: Thought = {
+  id: 'seed-2',
+  text: 'Other',
+  tags: [],
+  createdAt: '2026-11-14T19:30:00.000Z',
+  editedAt: null,
+}
+
+async function renderWithTwoSeeds() {
+  storage.items.set(THOUGHTS_ITEM, JSON.stringify({ version: 1, thoughts: [SEEDED, SECOND] }))
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+}
+
+async function pressDeleteOn(text: string) {
+  const card = [...container.querySelectorAll('.log-list__item')].find(
+    (item) => item.querySelector('.log-list__text')?.textContent === text,
+  )
+  const deleteButton = [...(card?.querySelectorAll('button') ?? [])].find((b) => b.textContent === 'Delete')
+  if (deleteButton === undefined) throw new Error('Delete button not found')
+  await act(async () => {
+    deleteButton.click()
+  })
+}
+
+function deleteDialog(): Element | null {
+  return container.querySelector('.delete-dialog')
+}
+
+test('asks "Delete this thought?" with its time and text, no gist, and deletes after Delete thought', async () => {
+  await renderWithTwoSeeds()
+  await pressDeleteOn('Original')
+
+  const dialogText = deleteDialog()?.textContent ?? ''
+  expect(dialogText).toContain('Delete this thought?')
+  expect(dialogText).toContain('Original')
+  expect(deleteDialog()?.querySelector('.delete-dialog__time')?.textContent).toMatch(/\d{2}:\d{2}$/)
+  expect(dialogText).toContain('It will no longer show in your log.')
+  expect(dialogText.toLowerCase()).not.toContain('gist')
+
+  await act(async () => {
+    button('Delete thought').click()
+  })
+
+  expect(shownTexts()).toEqual(['Other'])
+  expect(deleteDialog()).toBeNull()
+  expect(storedThoughts()).toEqual([SECOND])
+})
+
+test('keeps the thought and the stored item when the user cancels the delete', async () => {
+  await renderWithTwoSeeds()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  await pressDeleteOn('Original')
+  await act(async () => {
+    button('Cancel').click()
+  })
+
+  expect(deleteDialog()).toBeNull()
+  expect(shownTexts()).toEqual(['Other', 'Original'])
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
+
+test('keeps the thought and says so when the storage write fails on delete', async () => {
+  await renderWithTwoSeeds()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  await pressDeleteOn('Original')
+  storage.failWrites = true
+  await act(async () => {
+    button('Delete thought').click()
+  })
+
+  expect(deleteDialog()?.querySelector('[role="alert"]')?.textContent).toBe(
+    "Couldn't delete your thought. It is still in your log.",
+  )
+  expect(shownTexts()).toEqual(['Other', 'Original'])
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})

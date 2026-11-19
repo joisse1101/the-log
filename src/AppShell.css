@@ -76,6 +76,48 @@
   box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
 }
 
+.delete-dialog {
+  position: fixed;
+  inset: 20% 1rem auto;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #fff;
+  border: 1px solid #999;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 20%);
+}
+
+.delete-dialog__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.delete-dialog__time,
+.delete-dialog__note {
+  margin: 0;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.delete-dialog__text {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.delete-dialog__error {
+  margin: 0;
+  color: #b00020;
+}
+
+.delete-dialog__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 .edit-dialog__time {
   margin: 0;
   color: #555;

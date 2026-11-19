@@ -82,12 +82,14 @@
 
 ## delete-thought
 
-- [ ] T-thought-capture-delete-confirm Delete a thought after confirmation
+- [x] T-thought-capture-delete-confirm Delete a thought after confirmation
   Satisfies: AC-thought-capture-delete-confirmed (steps 1.1, 1.2, 1.3, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.13)
   Verify: Seed two thoughts; press Delete on one, see "Delete this thought?" with its time and text and no mention of a gist, press Delete thought; the card is gone and item the-log:thoughts holds only the other thought.
-- [ ] T-thought-capture-delete-cancel Keep the thought when the user cancels
+  result: npx tsc --noEmit -p . -> no errors; npm test -> 6 files, 58 tests passed, 0 failed, including the seeded-two-thoughts delete-confirm test with stubbed storage
+- [x] T-thought-capture-delete-cancel Keep the thought when the user cancels
   Satisfies: AC-thought-capture-delete-cancelled (steps 1.4, 1.5)
   Verify: Press Delete on a seeded thought, then Cancel; the dialog closes, the card is still there and item the-log:thoughts is unchanged.
+  result: npx tsc --noEmit -p . -> no errors; npm test -> 6 files, 58 tests passed, 0 failed, including the cancel test: dialog closed, card kept, item the-log:thoughts unchanged
 
 ## open-log
 

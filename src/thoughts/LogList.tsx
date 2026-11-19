@@ -4,10 +4,11 @@ import type { Thought } from './thought'
 interface LogListProps {
   thoughts: Thought[]
   onEdit: (thought: Thought) => void
+  onDelete: (thought: Thought) => void
 }
 
 /** Thought text is rendered as text, never as HTML. */
-export function LogList({ thoughts, onEdit }: LogListProps) {
+export function LogList({ thoughts, onEdit, onDelete }: LogListProps) {
   const now = new Date()
   return (
     <ul className="log-list">
@@ -28,6 +29,9 @@ export function LogList({ thoughts, onEdit }: LogListProps) {
           )}
           <button type="button" className="log-list__edit" onClick={() => onEdit(thought)}>
             Edit
+          </button>
+          <button type="button" className="log-list__delete" onClick={() => onDelete(thought)}>
+            Delete
           </button>
         </li>
       ))}

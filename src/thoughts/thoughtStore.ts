@@ -14,4 +14,5 @@ export interface ThoughtStore {
   get(id: string): Thought | undefined
   add(thought: Thought): void
   replace(thought: Thought): void
+  remove(id: string): void
 }

@@ -36,3 +36,25 @@ test('add throws StorageWriteFailed and keeps the item unchanged when setItem th
   expect(() => store.add({ ...THOUGHT, id: 'b' })).toThrow(StorageWriteFailed)
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
 })
+
+test('remove writes the item without that thought and leaves the others', () => {
+  const storage = new FakeStorage()
+  const store = new LocalThoughtStore(storage)
+  store.add(THOUGHT)
+  store.add({ ...THOUGHT, id: 'b' })
+
+  store.remove('a')
+
+  expect(store.all().map((thought) => thought.id)).toEqual(['b'])
+})
+
+test('remove throws StorageWriteFailed and keeps the item unchanged when setItem throws', () => {
+  const storage = new FakeStorage()
+  const store = new LocalThoughtStore(storage)
+  store.add(THOUGHT)
+  const before = storage.items.get(THOUGHTS_ITEM)
+  storage.failWrites = true
+
+  expect(() => store.remove('a')).toThrow(StorageWriteFailed)
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
