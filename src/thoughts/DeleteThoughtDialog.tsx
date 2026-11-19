@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { formatThoughtTime } from './formatThoughtTime'
+import { useDialogKeys } from './dialogKeys'
 import type { Thought } from './thought'
 import type { ThoughtService } from './thoughtService'
 
@@ -14,6 +15,8 @@ interface DeleteThoughtDialogProps {
 
 export function DeleteThoughtDialog({ service, thought, onDeleted, onClose }: DeleteThoughtDialogProps) {
   const [error, setError] = useState<string | null>(null)
+  const dialog = useRef<HTMLDivElement>(null)
+  useDialogKeys(dialog, onClose)
 
   function confirm() {
     const result = service.delete(thought.id)
@@ -26,23 +29,38 @@ export function DeleteThoughtDialog({ service, thought, onDeleted, onClose }: De
   }
 
   return (
-    <div className="delete-dialog" role="dialog" aria-modal="true" aria-label="Delete thought">
-      <h2 className="delete-dialog__title">Delete this thought?</h2>
-      <p className="delete-dialog__time">{formatThoughtTime(thought.createdAt, new Date())}</p>
-      <p className="delete-dialog__text">{thought.text}</p>
-      <p className="delete-dialog__note">It will no longer show in your log.</p>
+    <div className="dialog-layer">
+      <div className="dialog-scrim" aria-hidden="true" onClick={onClose} />
+      <div
+        className="delete-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-note"
+        ref={dialog}
+        tabIndex={-1}
+      >
+      <h2 id="delete-dialog-title" className="delete-dialog__title">Delete this thought?</h2>
+      <div className="delete-dialog__preview">
+        <time className="delete-dialog__time" dateTime={thought.createdAt}>
+          {formatThoughtTime(thought.createdAt, new Date())}
+        </time>
+        <p className="delete-dialog__text">{thought.text}</p>
+      </div>
+      <p id="delete-dialog-note" className="delete-dialog__note">It will no longer show in your log.</p>
       {error !== null && (
         <p className="delete-dialog__error" role="alert">
           {error}
         </p>
       )}
       <div className="delete-dialog__actions">
-        <button type="button" onClick={onClose}>
+        <button type="button" className="button button--secondary" onClick={onClose} autoFocus>
           Cancel
         </button>
-        <button type="button" onClick={confirm}>
+        <button type="button" className="button button--danger" onClick={confirm}>
           Delete thought
         </button>
+      </div>
       </div>
     </div>
   )

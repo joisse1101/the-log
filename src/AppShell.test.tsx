@@ -285,6 +285,12 @@ function button(label: string): HTMLButtonElement {
   return found
 }
 
+function rowButton(namePrefix: string): HTMLButtonElement {
+  const found = [...container.querySelectorAll('button')].find((b) => b.getAttribute('aria-label')?.startsWith(`${namePrefix},`))
+  if (found === undefined) throw new Error(`${namePrefix} button not found`)
+  return found
+}
+
 function dialogBox(): HTMLTextAreaElement {
   const found = container.querySelector<HTMLTextAreaElement>('.edit-dialog textarea')
   if (found === null) throw new Error('edit dialog not found')
@@ -293,7 +299,7 @@ function dialogBox(): HTMLTextAreaElement {
 
 async function openEdit() {
   await act(async () => {
-    button('Edit').click()
+    rowButton('Edit thought').click()
   })
 }
 
@@ -442,7 +448,7 @@ async function pressDeleteOn(text: string) {
   const card = [...container.querySelectorAll('.log-list__item')].find(
     (item) => item.querySelector('.log-list__text')?.textContent === text,
   )
-  const deleteButton = [...(card?.querySelectorAll('button') ?? [])].find((b) => b.textContent === 'Delete')
+  const deleteButton = [...(card?.querySelectorAll('button') ?? [])].find((b) => b.getAttribute('aria-label')?.startsWith('Delete thought,'))
   if (deleteButton === undefined) throw new Error('Delete button not found')
   await act(async () => {
     deleteButton.click()
@@ -561,4 +567,243 @@ test('renders an empty log when reading the stored thoughts throws', async () =>
 
   expect(container.querySelector('h1')?.textContent).toBe('The Log')
   expect(shownTexts()).toEqual([])
+})
+
+async function pressEscape(target: Element) {
+  await act(async () => {
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+  })
+}
+
+test('gives each row buttons a name with the time shown on its card', async () => {
+  await renderWithSeed()
+  const time = container.querySelector('.log-list__time')?.textContent
+  expect(rowButton('Edit thought').getAttribute('aria-label')).toBe(`Edit thought, ${time}`)
+  expect(rowButton('Delete thought').getAttribute('aria-label')).toBe(`Delete thought, ${time}`)
+})
+
+test('closes the edit dialog with Escape without saving and returns focus to its button', async () => {
+  await renderWithSeed()
+  const opener = rowButton('Edit thought')
+  opener.focus()
+  await openEdit()
+  await typeInDialog('Changed')
+  await pressEscape(dialogBox())
+
+  expect(container.querySelector('.edit-dialog')).toBeNull()
+  expect(storedThoughts()[0].text).toBe('Original')
+  expect(document.activeElement).toBe(opener)
+})
+
+test('closes the delete dialog with Escape without deleting and returns focus to its button', async () => {
+  await renderWithSeed()
+  const opener = rowButton('Delete thought')
+  opener.focus()
+  await pressDeleteOn('Original')
+  await pressEscape(button('Cancel'))
+
+  expect(deleteDialog()).toBeNull()
+  expect(storedThoughts()).toHaveLength(1)
+  expect(document.activeElement).toBe(opener)
+})
+
+test('moves focus to the heading after the thought it opened on is deleted', async () => {
+  await renderWithSeed()
+  rowButton('Delete thought').focus()
+  await pressDeleteOn('Original')
+  await act(async () => {
+    button('Delete thought').click()
+  })
+
+  expect(document.activeElement).toBe(container.querySelector('h1'))
+})
+
+test('keeps Tab inside the open dialog', async () => {
+  await renderWithSeed()
+  await pressDeleteOn('Original')
+  const confirm = button('Delete thought')
+  confirm.focus()
+  await act(async () => {
+    confirm.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+  })
+
+  expect(document.activeElement).toBe(button('Cancel'))
+})
+
+test('clears the new-thought error when the user types', async () => {
+  await type('')
+  await saveWithShiftEnter()
+  expect(container.querySelector('[role="alert"]')).not.toBeNull()
+  await type('a')
+
+  expect(container.querySelector('[role="alert"]')).toBeNull()
+})
+
+test('clears the edit error when the user types', async () => {
+  await renderWithSeed()
+  await openEdit()
+  await typeInDialog('')
+  await act(async () => {
+    dialogBox().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, cancelable: true }))
+  })
+  expect(dialogAlert()).toBe('A thought needs some text.')
+  await typeInDialog('x')
+
+  expect(dialogAlert()).toBeUndefined()
+})
+
+// Keyboard and focus while a dialog is open
+
+async function press(target: EventTarget, key: string, shiftKey = false) {
+  const event = new KeyboardEvent('keydown', { key, shiftKey, bubbles: true, cancelable: true })
+  await act(async () => {
+    target.dispatchEvent(event)
+  })
+  return event
+}
+
+async function openFromRow(namePrefix: string): Promise<HTMLButtonElement> {
+  const opener = rowButton(namePrefix)
+  opener.focus()
+  await act(async () => {
+    opener.click()
+  })
+  return opener
+}
+
+function dialogButtons(selector: string): HTMLElement[] {
+  return [...container.querySelectorAll<HTMLElement>(`${selector} button, ${selector} textarea`)]
+}
+
+test('Delete dialog puts focus on Cancel when it opens', async () => {
+  await renderWithTwoSeeds()
+  await openFromRow('Delete thought')
+
+  expect(document.activeElement).toBe(button('Cancel'))
+})
+
+test.each(['body', 'opener'])('Escape closes the Delete dialog with focus on the %s, deleting nothing', async (where) => {
+  await renderWithTwoSeeds()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  const opener = await openFromRow('Delete thought')
+  ;(where === 'body' ? document.body : opener).focus()
+  if (where === 'body') (document.activeElement as HTMLElement).blur()
+  expect(container.contains(document.activeElement) && deleteDialog()?.contains(document.activeElement)).toBeFalsy()
+
+  const event = await press(document.activeElement ?? document.body, 'Escape')
+
+  expect(event.defaultPrevented).toBe(true)
+  expect(deleteDialog()).toBeNull()
+  expect(shownTexts()).toEqual(['Other', 'Original'])
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
+
+test('Escape closes the Edit dialog with focus outside it, without saving', async () => {
+  await renderWithSeed()
+  const before = storage.items.get(THOUGHTS_ITEM)
+  await openFromRow('Edit thought')
+  await typeInDialog('Changed')
+  ;(document.activeElement as HTMLElement).blur()
+
+  await press(document.body, 'Escape')
+
+  expect(container.querySelector('.edit-dialog')).toBeNull()
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
+
+test('Escape closes a dialog once and the listener is gone afterwards', async () => {
+  await renderWithTwoSeeds()
+  await openFromRow('Delete thought')
+  const removed = vi.spyOn(document, 'removeEventListener')
+  await press(document.body, 'Escape')
+
+  expect(removed.mock.calls.filter(([type]) => type === 'keydown')).toHaveLength(1)
+  const event = await press(document.body, 'Escape')
+  expect(event.defaultPrevented).toBe(false)
+  removed.mockRestore()
+})
+
+test.each([
+  ['Delete', '.delete-dialog', 'Delete thought'],
+  ['Edit', '.edit-dialog', 'Edit thought'],
+])('Tab with focus outside the %s dialog lands inside it', async (_name, selector, opener) => {
+  await renderWithTwoSeeds()
+  await openFromRow(opener)
+  const items = dialogButtons(selector)
+  ;(document.activeElement as HTMLElement).blur()
+
+  const forward = await press(document.body, 'Tab')
+  expect(forward.defaultPrevented).toBe(true)
+  expect(document.activeElement).toBe(items[0])
+
+  rowButton(opener).focus()
+  const backward = await press(document.activeElement ?? document.body, 'Tab', true)
+  expect(backward.defaultPrevented).toBe(true)
+  expect(document.activeElement).toBe(items[items.length - 1])
+})
+
+test.each([
+  ['Delete', '.delete-dialog', 'Delete thought'],
+  ['Edit', '.edit-dialog', 'Edit thought'],
+])('Tab and Shift+Tab wrap around inside the %s dialog', async (_name, selector, opener) => {
+  await renderWithTwoSeeds()
+  await openFromRow(opener)
+  const items = dialogButtons(selector)
+  const first = items[0]
+  const last = items[items.length - 1]
+
+  first.focus()
+  const back = await press(first, 'Tab', true)
+  expect(back.defaultPrevented).toBe(true)
+  expect(document.activeElement).toBe(last)
+
+  const forward = await press(last, 'Tab')
+  expect(forward.defaultPrevented).toBe(true)
+  expect(document.activeElement).toBe(first)
+})
+
+test('Tab in the middle of the Edit dialog is left to the browser', async () => {
+  await renderWithTwoSeeds()
+  await openFromRow('Edit thought')
+  const items = dialogButtons('.edit-dialog')
+  items[1].focus()
+
+  const middle = await press(items[1], 'Tab')
+
+  expect(items.length).toBeGreaterThan(2)
+  expect(middle.defaultPrevented).toBe(false)
+})
+
+test('Shift+Enter in the Edit dialog still saves', async () => {
+  await renderWithSeed()
+  await openFromRow('Edit thought')
+  await typeInDialog('Saved by keys')
+  await press(dialogBox(), 'Enter', true)
+
+  expect(container.querySelector('.edit-dialog')).toBeNull()
+  expect(storedThoughts()[0].text).toBe('Saved by keys')
+})
+
+const CLOSERS: Array<[string, string, string, () => Promise<void>]> = [
+  ['Delete', 'Cancel', 'Delete thought', async () => button('Cancel').click()],
+  ['Delete', 'the scrim', 'Delete thought', async () => container.querySelector<HTMLElement>('.dialog-scrim')?.click()],
+  ['Delete', 'Escape', 'Delete thought', async () => void (await press(document.body, 'Escape'))],
+  ['Edit', 'the X button', 'Edit thought', async () => (container.querySelector('[aria-label="Close without saving"]') as HTMLElement).click()],
+  ['Edit', 'the scrim', 'Edit thought', async () => container.querySelector<HTMLElement>('.dialog-scrim')?.click()],
+  ['Edit', 'Cancel', 'Edit thought', async () => button('Cancel').click()],
+  ['Edit', 'Save', 'Edit thought', async () => {
+    await typeInDialog('Edited')
+    await saveDialog()
+  }],
+]
+
+test.each(CLOSERS)('focus returns to the opener after the %s dialog closes by %s', async (_dialog, _how, opener, close) => {
+  await renderWithTwoSeeds()
+  const openerButton = await openFromRow(opener)
+  await act(async () => {
+    await close()
+  })
+
+  expect(container.querySelector('.delete-dialog, .edit-dialog')).toBeNull()
+  expect(document.activeElement).toBe(openerButton)
 })
