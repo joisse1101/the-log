@@ -15,6 +15,6 @@ What the system does:
 - It serves the site only over HTTPS and redirects http to https.
 - It deploys a commit only while that commit is still the head of `main`.
 - It keeps the last good version live when a check or the build fails.
-- It shows a minimal app shell with the title "The Log" until later features fill it in.
+- It shows the app page with the title "The Log", the thought box and the log of local thoughts.
 
 Triggers, settings and job permissions are in [reference](reference.md). Behaviour, diagrams and decisions are in [design](design.md).

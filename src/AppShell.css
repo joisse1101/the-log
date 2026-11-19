@@ -10,7 +10,45 @@
   font-size: 2rem;
 }
 
-.app-shell__placeholder {
+.thought-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.thought-box__input {
+  min-height: 5rem;
+  padding: 0.5rem;
+  font: inherit;
+}
+
+.thought-box__save {
+  align-self: flex-end;
+}
+
+.thought-box__error {
   margin: 0;
+  color: #b00020;
+}
+
+.log-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log-list__item {
+  padding: 0.75rem 0;
+  border-top: 1px solid #ddd;
+}
+
+.log-list__time {
   color: #555;
+  font-size: 0.85rem;
+}
+
+.log-list__text {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
 }

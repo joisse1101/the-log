@@ -125,7 +125,7 @@ sequenceDiagram
     User->>Host: 2.1 GET scripts and styles under /the-log/assets/
     Host-->>User: 2.2 200 scripts and styles
     User->>Shell: 2.3 React mounts AppShell
-    Shell-->>User: 2.4 shows the title The Log and a placeholder line
+    Shell-->>User: 2.4 shows the title The Log, the thought box and the log of local thoughts
   end
 ```
 
@@ -139,7 +139,7 @@ sequenceDiagram
 | On a push to `main`, Checks keeps the built `dist` as the Pages artifact, and Publish site deploys it without building again | `main` is built once, and the deployed files are exactly the ones the checks passed on | user |
 | Publish site deploys only while the commit is still the head of `main`; a run for an older commit skips its jobs | A late run for an older commit cannot replace a newer deploy with stale content | user |
 | A manual run of Publish site is allowed only on `main`, and it type-checks, tests and builds itself before deploying | A re-deploy needs no new commit and never publishes unchecked code | user |
-| The app page is a minimal React shell with the title "The Log" and a short placeholder line | It shows that the site is live | user |
+| The app page is a React shell with the title "The Log", the thought box and the log of local thoughts | It shows that the site is live and lets the user write thoughts | user |
 | Checks runs type-check (tsc), one Vitest test that the shell renders, and the Vite build | It gives the build a real gate | user |
 | Both workflows use Node 26, the latest release | Use the latest | user |
 | If the deploy job fails after a good build, the address keeps serving the last good version; no separate branch is drawn | No criterion covers it | user |

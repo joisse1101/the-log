@@ -2,21 +2,26 @@
 
 ## write-thought
 
-- [ ] T-thought-capture-write-save Save a typed thought and show it at the top of the log
+- [x] T-thought-capture-write-save Save a typed thought and show it at the top of the log
   Satisfies: AC-thought-capture-write-saved (steps 1.1, 1.2, 1.3, 1.7, 2.1, 2.2, 2.7, 2.8, 2.9, 3.2, 3.3)
   Verify: With browser storage stubbed empty, type "First thought" and press Shift + Enter; the log shows it first with "Today, HH:MM" at the current time, and item the-log:thoughts holds one thought with a UUID id, createdAt set and editedAt null.
-- [ ] T-thought-capture-write-empty-box Empty the box after a successful save
+  result: npm test -> 24 passed, 0 failed (AppShell save test covers Today HH:MM, UUID id, editedAt null); tsc --noEmit -> clean
+- [x] T-thought-capture-write-empty-box Empty the box after a successful save
   Satisfies: AC-thought-capture-write-box-empties (steps 2.9, 3.1)
   Verify: After saving "First thought", the box is empty and keeps focus, and typing "Second" then saving adds a second thought above the first.
-- [ ] T-thought-capture-write-blank Refuse blank text
+  result: npm test -> 24 passed, 0 failed (box empty, focus kept, second thought above first); tsc --noEmit -> clean
+- [x] T-thought-capture-write-blank Refuse blank text
   Satisfies: AC-thought-capture-write-blank (steps 1.4, 1.5, 1.6)
   Verify: Save with an empty box and again with "   "; each time "A thought needs some text." shows (failure response "Blank text on write") and item the-log:thoughts is unchanged.
-- [ ] T-thought-capture-write-storage-fails Keep the text when the storage write fails
+  result: npm test -> 24 passed, 0 failed ('' and '   ' show "A thought needs some text.", stored item absent); tsc --noEmit -> clean
+- [x] T-thought-capture-write-storage-fails Keep the text when the storage write fails
   Satisfies: AC-thought-capture-write-save-fails, AC-thought-capture-device-save-fails (steps 2.3, 2.4, 2.5, 2.6)
   Verify: Stub setItem to throw a QuotaExceededError, type "Lost?" and save; "Couldn't save your thought. Your text is still in the box." shows (failure responses "Storage write fails on write" and its device row), the box still holds "Lost?" and the log is unchanged.
-- [ ] T-thought-capture-write-local-only Save as a local thought with no place choice
+  result: npm test -> 24 passed, 0 failed (failing write shows the storage message, box keeps "Lost?", log and stored item unchanged); tsc --noEmit -> clean
+- [x] T-thought-capture-write-local-only Save as a local thought with no place choice
   Satisfies: AC-thought-capture-device-save (steps 1.1, 2.1, 2.2, 2.7)
   Verify: Render the app; no control to choose where a thought is saved exists, and saving "Here" writes it to item the-log:thoughts and makes no network request (rule "Nothing leaves the device"; spy on fetch and see no call).
+  result: npm test -> 24 passed, 0 failed (no place-choice control, fetch spy not called, thought written to the-log:thoughts); tsc --noEmit -> clean; python scripts/check_docs.py -> docs check passed
 
 ## tag-thought
 
