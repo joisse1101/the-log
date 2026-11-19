@@ -68,3 +68,16 @@ AC2: Given a search word with no match, when I search, then I see a nothing-foun
 AC3: Given I clear the search, when it clears, then the full log returns
 AC4: Given more than 50 thoughts match the search, when I search, then the first 50 show and I can load the next 50",,"Q1: Search also matches tags, which overlaps Filter thoughts by tag; should search match tags or only text?
 A1:",
+INIT-TL-0009,Thought Log,Thought Capture,Keep thoughts on this device,"As a user, I want my thoughts saved on this device when I am not connected, so that I can use the log without a GitHub account",3,,,"AC1: Given I am disconnected, when I save a thought, then it is saved as a local thought with no choice offered
+AC2: Given I am disconnected, when I open the log, then I see only local thoughts, newest first
+AC3: Given local thoughts and gist thoughts both exist, when I am disconnected, then no gist thoughts show
+AC4: Given the local file cannot be written, when I save a thought, then I am told it failed and my text is kept
+AC5: Given I disconnect, when I open the log, then my local thoughts are still there and the gist is unchanged","Local thoughts live in a gitignored file under .data/ in the repo, not in the browser. Local thoughts and gist thoughts are separate and never merged. No move or copy between them.",,
+INIT-TL-0010,Thought Log,Thought Capture,Choose where a thought is saved,"As a connected user, I want to choose whether a thought is saved to my gist or to this device, so that I decide which thoughts go to GitHub",3,,INIT-TL-0009;INIT-SAA-0003,"AC1: Given I am connected with a linked gist, when I save a thought, then I can choose the gist or local, and it is saved only there
+AC2: Given I last saved a thought to a place, when I save the next thought, then that place is preselected
+AC3: Given I am connected, when I open the log, then I can switch between the gist log and the local log, and each shows only its own thoughts
+AC4: Given I am connected with no linked gist, when I try to save to the gist, then I am sent to pick or create a gist and nothing is saved
+AC5: Given the gist cannot be reached, when I save to it, then I am told it failed, my text is kept and nothing is saved locally in its place",The save choice follows the user's last choice. Building against a stubbed connection and a stubbed gist is enough. Saving while disconnected is covered by the story Keep thoughts on this device.,"Q1: What is preselected the first time, before there is a last choice?
+A1:
+Q2: When connected, do the gist log and the local log show together or one at a time?
+A2:",
