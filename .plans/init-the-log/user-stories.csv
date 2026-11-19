@@ -35,24 +35,21 @@ AC3: Given the gist cannot be read, when I refresh, then I see an error and the 
 INIT-TL-0001,Thought Log,Thought Capture,Write a thought,"As a user, I want to type a thought in free-form text and save it, so that I capture it before it is lost",5,,,"AC1: Given I have typed text, when I save, then a thought is added to the log with the current date and time and shows at the top
 AC2: Given I have saved a thought, when the save finishes, then the text box is empty and ready for the next thought
 AC3: Given the text box is empty or holds only spaces, when I save, then I am told a thought needs some text and nothing is saved
-AC4: Given the save fails, when I save, then I am told it failed, my text stays in the box and nothing is added to the log","Only text is stored. Each thought gets a unique ID so devices can tell thoughts apart. The size limit is only a warning for now, and the warning is not tested here. Building against a stubbed gist is enough. Where a thought is saved belongs to ""Keep thoughts on this device"" and ""Choose where a thought is saved"".",,
+AC4: Given the save fails, when I save, then I am told it failed, my text stays in the box and nothing is added to the log","Only text is stored. Each thought gets a unique ID so devices can tell thoughts apart. The size limit is only a warning for now, and the warning is not tested here. Building against a stubbed gist is enough. Where a thought is saved belongs to ""Keep thoughts on this device"" and ""Choose where a thought is saved"".",,Yes
 INIT-TL-0002,Thought Log,Thought Capture,Keep an unsaved thought,"As a user, I want my half-written text to survive a closed tab or a failed save, so that I never lose a thought",2,,INIT-TL-0001,"AC1: Given I typed text and did not save, when I close and reopen the app in the same browser, then my text is back in the box
 AC2: Given a save fails, when I look at the box, then my text is still there and I can try again
 AC3: Given a save succeeds, when it finishes, then the kept draft is cleared
-AC4: Given the browser blocks keeping drafts on this device, when I type, then the app still works and tells me drafts cannot be kept",,,
+AC4: Given the browser blocks keeping drafts on this device, when I type, then the app still works and tells me drafts cannot be kept",,,Yes
 INIT-TL-0003,Thought Log,Thought Capture,Edit a thought,"As a user, I want to correct a saved thought, so that the log stays accurate",2,,INIT-TL-0001,"AC1: Given a saved thought, when I change its text or tags and save, then the log shows the new text and keeps the original timestamp
 AC2: Given the thought was deleted elsewhere, when I save, then I am told it no longer exists
-AC3: Given the save to the gist fails, when I save, then my change is kept in the box and I see an error
-AC4: Given I remove all the text, when I save, then I am told text is needed and the saved thought is unchanged",,"Q1: The merge story keeps the edit with the later edit time, but this story keeps only the original timestamp; should an edited thought also record an edit time?
-A1:",
+AC3: Given this device's browser storage cannot be written, when I save an edit, then my change is kept in the box and I see an error
+AC4: Given I remove all the text, when I save, then I am told text is needed and the saved thought is unchanged","An edit keeps the original date and time, which the log shows, and also records the time of the last edit. Merge thoughts saved from two devices uses that time to keep the later edit.",,Yes
 INIT-TL-0004,Thought Log,Thought Capture,Delete a thought,"As a user, I want to delete a thought, so that I can remove what I do not want kept",2,,INIT-TL-0001,"AC1: Given a thought, when I delete and confirm, then it no longer appears in the log
-AC2: Given I cancel the confirmation, when I look at the log, then the thought is still there
-AC3: Given the gist update fails, when I delete, then the thought stays and I see an error
-AC4: Given I delete a thought, when I confirm, then I am told the old text remains in the gist's version history on GitHub","GitHub keeps old versions of a gist, so deleted text stays readable there: only to the owner for a private gist, to anyone for a public one.",,
+AC2: Given I cancel the confirmation, when I look at the log, then the thought is still there","Deleting from the linked gist, and the notice about the gist's version history, are in the story Delete a gist thought.",,Yes
 INIT-TL-0005,Thought Log,Thought Capture,Tag a thought,"As a user, I want to add tags to a thought, so that I can find it later",3,,INIT-TL-0001,"AC1: Given a thought being written or edited, when I add a tag and save, then the tag is saved with the thought
 AC2: Given a tag that differs from an existing one only in letter case or surrounding spaces, when I add it, then it is treated as the same tag
 AC3: Given a tag longer than 30 characters, when I add it, then I am told it is too long and it is not added
-AC4: Given an empty tag, when I add it, then it is not added",,,
+AC4: Given an empty tag, when I add it, then it is not added",,,Yes
 INIT-TL-0006,Thought Log,Log Browsing,View thoughts as a log,"As a user, I want to read my thoughts newest first with date and time, like a git log, so that I can follow how my thinking moved",3,,INIT-SAA-0003,"AC1: Given several thoughts, when I open the log, then each shows its date, time, text and tags, newest first
 AC2: Given no thoughts, when I open the log, then I see an empty-log message
 AC3: Given more than 50 thoughts, when I open the log, then the first 50 show and I can load the next 50
@@ -70,14 +67,25 @@ AC4: Given more than 50 thoughts match the search, when I search, then the first
 A1:",
 INIT-TL-0009,Thought Log,Thought Capture,Keep thoughts on this device,"As a user, I want my thoughts saved on this device when I am not connected, so that I can use the log without a GitHub account",3,,,"AC1: Given I am disconnected, when I save a thought, then it is saved as a local thought with no choice offered
 AC2: Given I am disconnected, when I open the log, then I see only local thoughts, newest first
-AC3: Given local thoughts and gist thoughts both exist, when I am disconnected, then no gist thoughts show
-AC4: Given the local file cannot be written, when I save a thought, then I am told it failed and my text is kept
-AC5: Given I disconnect, when I open the log, then my local thoughts are still there and the gist is unchanged","Local thoughts live in a gitignored file under .data/ in the repo, not in the browser. Local thoughts and gist thoughts are separate and never merged. No move or copy between them.",,
-INIT-TL-0010,Thought Log,Thought Capture,Choose where a thought is saved,"As a connected user, I want to choose whether a thought is saved to my gist or to this device, so that I decide which thoughts go to GitHub",3,,INIT-TL-0009;INIT-SAA-0003,"AC1: Given I am connected with a linked gist, when I save a thought, then I can choose the gist or local, and it is saved only there
+AC3: Given this device's browser storage cannot be written, when I save a thought, then I am told it failed and my text is kept","Local thoughts live in this browser's storage on this device, so they work on the GitHub Pages site. Clearing the browser's data for the site removes them. Local thoughts and gist thoughts are separate and never merged. No move or copy between them.",,Yes
+INIT-TL-0010,Thought Log,Gist Thoughts,Choose where a thought is saved,"As a connected user, I want to choose whether a thought is saved to my gist or to this device, so that I decide which thoughts go to GitHub",3,,INIT-TL-0009;INIT-SAA-0003,"AC1: Given I am connected with a linked gist, when I save a thought, then I can choose the gist or local, and it is saved only there
 AC2: Given I last saved a thought to a place, when I save the next thought, then that place is preselected
 AC3: Given I am connected, when I open the log, then I can switch between the gist log and the local log, and each shows only its own thoughts
 AC4: Given I am connected with no linked gist, when I try to save to the gist, then I am sent to pick or create a gist and nothing is saved
 AC5: Given the gist cannot be reached, when I save to it, then I am told it failed, my text is kept and nothing is saved locally in its place",The save choice follows the user's last choice. Building against a stubbed connection and a stubbed gist is enough. Saving while disconnected is covered by the story Keep thoughts on this device.,"Q1: What is preselected the first time, before there is a last choice?
-A1:
+A1: Local
 Q2: When connected, do the gist log and the local log show together or one at a time?
+A2: There will be a page to show together, or to see only the gist's log",
+INIT-TL-0011,Thought Log,Gist Thoughts,Delete a gist thought,"As a connected user, I want a thought I delete from my linked gist to be removed there, so that it no longer shows in the log I keep on GitHub",2,,INIT-TL-0004;INIT-SAA-0003,"AC1: Given a thought in my linked gist, when I delete and confirm, then the gist is updated and the thought no longer appears in the gist log
+AC2: Given the gist update fails, when I delete, then the thought stays and I see an error
+AC3: Given I delete a gist thought, when I confirm, then I am told the old text remains in the gist's version history on GitHub","Split from Delete a thought, which keeps deleting with a confirmation.
+GitHub keeps old versions of a gist, so deleted text stays readable there: only to the owner for a private gist, to anyone for a public one.","Q1: If the thought was already deleted from the gist on another device, what am I told when I delete it here?
+A1:",
+INIT-TL-0012,Thought Log,Gist Thoughts,Keep local thoughts apart when disconnecting,"As a user, I want my local thoughts and gist thoughts kept apart when I disconnect, so that disconnecting neither hides my local thoughts nor changes my gist",2,,INIT-TL-0009;INIT-SAA-0004,"AC1: Given local thoughts and gist thoughts both exist, when I am disconnected, then no gist thoughts show
+AC2: Given I disconnect, when I open the log, then my local thoughts are still there and the gist is unchanged","Split from Keep thoughts on this device, so that story can be built before the GitHub Connection work.
+Local thoughts and gist thoughts are separate and never merged.","Q1: The first criterion (no gist thoughts show while disconnected) overlaps Keep thoughts on this device, which already shows only local thoughts when disconnected: keep both, or drop it here?
+A1:
+Q2: Does this story own a failure path, such as local thoughts that cannot be read after disconnecting, or is that left to Keep thoughts on this device?
 A2:",
+INIT-TL-0013,Thought Log,Gist Thoughts,Edit a gist thought,"As a connected user, I want an edit to a thought in my linked gist to be saved there, so that the log I keep on GitHub stays accurate",2,,INIT-TL-0003;INIT-SAA-0003,"AC1: Given a thought in my linked gist, when I change its text or tags and save, then the gist is updated and the gist log shows the new text
+AC2: Given the save to the gist fails, when I save, then my change is kept in the box and I see an error","Split from Edit a thought, which keeps editing with the original timestamp and the time of the last edit.",,

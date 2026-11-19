@@ -1,0 +1,52 @@
+{
+  "scope": {
+    "type": "feature",
+    "epic": "Thought Log",
+    "feature": "Thought Capture"
+  },
+  "stories": [
+    {
+      "id": "INIT-TL-0001",
+      "title": "Write a thought",
+      "hash": "46bffc5b15f2",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    },
+    {
+      "id": "INIT-TL-0002",
+      "title": "Keep an unsaved thought",
+      "hash": "fa7b5244eae1",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    },
+    {
+      "id": "INIT-TL-0003",
+      "title": "Edit a thought",
+      "hash": "da700c7f7b9f",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    },
+    {
+      "id": "INIT-TL-0004",
+      "title": "Delete a thought",
+      "hash": "044f76ea3016",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    },
+    {
+      "id": "INIT-TL-0005",
+      "title": "Tag a thought",
+      "hash": "2329030b35d3",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    },
+    {
+      "id": "INIT-TL-0009",
+      "title": "Keep thoughts on this device",
+      "hash": "697e96fc26ba",
+      "epic": "Thought Log",
+      "feature": "Thought Capture"
+    }
+  ],
+  "drawnAt": "2026-11-19T03:23:26.261Z"
+}
