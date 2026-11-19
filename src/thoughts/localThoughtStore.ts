@@ -15,16 +15,26 @@ interface StoredThoughts {
   thoughts: Thought[]
 }
 
+function isStoredThoughts(value: unknown): value is StoredThoughts {
+  return typeof value === 'object' && value !== null && Array.isArray((value as { thoughts?: unknown }).thoughts)
+}
+
 export class LocalThoughtStore implements ThoughtStore {
   constructor(private readonly storage: BrowserStorage) {}
 
   all(): Thought[] {
-    const raw = this.storage.getItem(THOUGHTS_ITEM)
-    if (raw === null) {
+    // Blocked storage or corrupt data must not blank the app; the read falls back to an empty
+    // log and leaves the stored item untouched.
+    try {
+      const raw = this.storage.getItem(THOUGHTS_ITEM)
+      if (raw === null) {
+        return []
+      }
+      const stored: unknown = JSON.parse(raw)
+      return isStoredThoughts(stored) ? stored.thoughts : []
+    } catch {
       return []
     }
-    const stored = JSON.parse(raw) as StoredThoughts
-    return stored.thoughts
   }
 
   get(id: string): Thought | undefined {

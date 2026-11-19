@@ -58,3 +58,28 @@ test('remove throws StorageWriteFailed and keeps the item unchanged when setItem
   expect(() => store.remove('a')).toThrow(StorageWriteFailed)
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
 })
+
+test.each(['not json {', '{}', 'null', '"x"', '{"thoughts":5}'])('all returns an empty list for %s', (corrupt) => {
+  const storage = new FakeStorage()
+  storage.items.set(THOUGHTS_ITEM, corrupt)
+  const store = new LocalThoughtStore(storage)
+
+  expect(store.all()).toEqual([])
+  expect(store.get('a')).toBeUndefined()
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(corrupt)
+})
+
+test('all returns an empty list when getItem throws', () => {
+  const storage = new FakeStorage()
+  storage.unreadableItems.add(THOUGHTS_ITEM)
+
+  expect(new LocalThoughtStore(storage).all()).toEqual([])
+})
+
+test('add still throws StorageWriteFailed when setItem fails over corrupt data', () => {
+  const storage = new FakeStorage()
+  storage.items.set(THOUGHTS_ITEM, 'not json {')
+  storage.failWrites = true
+
+  expect(() => new LocalThoughtStore(storage).add(THOUGHT)).toThrow(StorageWriteFailed)
+})

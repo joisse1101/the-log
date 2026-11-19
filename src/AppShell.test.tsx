@@ -481,3 +481,33 @@ test('keeps the thought and says so when the storage write fails on delete', asy
   expect(shownTexts()).toEqual(['Other', 'Original'])
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
 })
+
+async function renderAgain() {
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+}
+
+test.each(['not json {', '{}', 'null', '"x"', '{"thoughts":5}'])(
+  'renders an empty log and keeps the stored item when it holds %s',
+  async (corrupt) => {
+    storage.items.set(THOUGHTS_ITEM, corrupt)
+    await renderAgain()
+
+    expect(container.querySelector('h1')?.textContent).toBe('The Log')
+    expect(shownTexts()).toEqual([])
+    expect(storage.items.get(THOUGHTS_ITEM)).toBe(corrupt)
+  },
+)
+
+test('renders an empty log when reading the stored thoughts throws', async () => {
+  storage.unreadableItems.add(THOUGHTS_ITEM)
+  await renderAgain()
+
+  expect(container.querySelector('h1')?.textContent).toBe('The Log')
+  expect(shownTexts()).toEqual([])
+})
