@@ -76,6 +76,32 @@ test('all returns an empty list when getItem throws', () => {
   expect(new LocalThoughtStore(storage).all()).toEqual([])
 })
 
+const CORRUPT_ITEMS = ['not json {', '{}', 'null', '"x"', '{"thoughts":5}']
+
+test.each(CORRUPT_ITEMS)('add, replace and remove throw StorageWriteFailed and keep %s', (corrupt) => {
+  const storage = new FakeStorage()
+  storage.items.set(THOUGHTS_ITEM, corrupt)
+  const store = new LocalThoughtStore(storage)
+
+  expect(() => store.add(THOUGHT)).toThrow(StorageWriteFailed)
+  expect(() => store.replace(THOUGHT)).toThrow(StorageWriteFailed)
+  expect(() => store.remove('a')).toThrow(StorageWriteFailed)
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(corrupt)
+})
+
+test('add, replace and remove throw StorageWriteFailed and write nothing when getItem throws', () => {
+  const storage = new FakeStorage()
+  storage.items.set(THOUGHTS_ITEM, JSON.stringify({ version: 1, thoughts: [THOUGHT] }))
+  const before = storage.items.get(THOUGHTS_ITEM)
+  storage.unreadableItems.add(THOUGHTS_ITEM)
+  const store = new LocalThoughtStore(storage)
+
+  expect(() => store.add({ ...THOUGHT, id: 'b' })).toThrow(StorageWriteFailed)
+  expect(() => store.replace(THOUGHT)).toThrow(StorageWriteFailed)
+  expect(() => store.remove('a')).toThrow(StorageWriteFailed)
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+})
+
 test('add still throws StorageWriteFailed when setItem fails over corrupt data', () => {
   const storage = new FakeStorage()
   storage.items.set(THOUGHTS_ITEM, 'not json {')

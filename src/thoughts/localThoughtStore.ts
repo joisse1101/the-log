@@ -26,12 +26,7 @@ export class LocalThoughtStore implements ThoughtStore {
     // Blocked storage or corrupt data must not blank the app; the read falls back to an empty
     // log and leaves the stored item untouched.
     try {
-      const raw = this.storage.getItem(THOUGHTS_ITEM)
-      if (raw === null) {
-        return []
-      }
-      const stored: unknown = JSON.parse(raw)
-      return isStoredThoughts(stored) ? stored.thoughts : []
+      return this.read()
     } catch {
       return []
     }
@@ -42,15 +37,37 @@ export class LocalThoughtStore implements ThoughtStore {
   }
 
   add(thought: Thought): void {
-    this.write([...this.all(), thought])
+    this.write([...this.readForWrite(), thought])
   }
 
   replace(thought: Thought): void {
-    this.write(this.all().map((stored) => (stored.id === thought.id ? thought : stored)))
+    this.write(this.readForWrite().map((stored) => (stored.id === thought.id ? thought : stored)))
   }
 
   remove(id: string): void {
-    this.write(this.all().filter((stored) => stored.id !== id))
+    this.write(this.readForWrite().filter((stored) => stored.id !== id))
+  }
+
+  /** Returns the stored thoughts, an empty list when never written; throws when unreadable or corrupt. */
+  private read(): Thought[] {
+    const raw = this.storage.getItem(THOUGHTS_ITEM)
+    if (raw === null) {
+      return []
+    }
+    const stored: unknown = JSON.parse(raw)
+    if (!isStoredThoughts(stored)) {
+      throw new Error('The stored thoughts have an unexpected shape.')
+    }
+    return stored.thoughts
+  }
+
+  /** A write must never replace an item it cannot read, or every stored thought would be lost. */
+  private readForWrite(): Thought[] {
+    try {
+      return this.read()
+    } catch (error: unknown) {
+      throw new StorageWriteFailed({ cause: error })
+    }
   }
 
   private write(thoughts: Thought[]): void {

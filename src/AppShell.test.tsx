@@ -504,6 +504,20 @@ test.each(['not json {', '{}', 'null', '"x"', '{"thoughts":5}'])(
   },
 )
 
+test('refuses to save over corrupt stored data, keeps the box text and leaves the item unchanged', async () => {
+  storage.items.set(THOUGHTS_ITEM, 'not json {')
+  await renderAgain()
+
+  await type('Do not lose the old log')
+  await saveWithShiftEnter()
+
+  expect(container.querySelector('[role="alert"]')?.textContent).toBe(
+    "Couldn't save your thought. Your text is still in the box.",
+  )
+  expect(box().value).toBe('Do not lose the old log')
+  expect(storage.items.get(THOUGHTS_ITEM)).toBe('not json {')
+})
+
 test('renders an empty log when reading the stored thoughts throws', async () => {
   storage.unreadableItems.add(THOUGHTS_ITEM)
   await renderAgain()
