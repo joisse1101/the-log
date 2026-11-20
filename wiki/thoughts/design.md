@@ -16,12 +16,16 @@ How the home page lays out the text box and the log, and how a thought's text is
 
 ## The text box and the page
 
-- The box grows with its text, line by line, until it is as tall as the screen (the screen height less the page's own top and bottom padding). After that its text scrolls inside the box, with the styled bar. The height is set from the text by script (`src/thoughts/ThoughtBox.tsx`) so that it can be animated.
+- The box grows with its text, line by line, until it reaches its cap: the screen height less 96px (48px of room above and below). After that its text scrolls inside the box, with the styled bar. The height is set from the text by script (`src/thoughts/ThoughtBox.tsx`) so that it can be animated.
+- The text is measured in an invisible copy of the box (a second textarea positioned inside the box, hidden and with no height), never in the real box, so measuring cannot change the page's height or move its scroll position.
 - While the box is open the page itself scrolls when the content is taller than the screen: a big box pushes the header out of view, and the user scrolls the page down to reach Save, any message under the box, and the timeline. The timeline is never shorter than 240px (about two cards) there. Nothing is hidden or locked.
 - Scrolling the page never folds the box. Only a scroll inside the timeline does.
 - Folded, the page fits the screen and only the timeline scrolls.
 - The page scrollbar looks like the timeline's. The page reserves room for its bar on both sides, so nothing moves when it appears.
-- The caret stays on screen: when it is at the end of the text, the box is scrolled into view once it has grown. Focus is kept throughout.
+- The page moves in step with the box. When the box's new height is known, the page's scroll position for that final height is worked out once, and the page scrolls to it along the same curve and over the same time as the height transition (`--motion-grow` and `--motion-ease`), so the box and the page move together. Below the cap the page scrolls just far enough to keep the box and a 12px margin above the bottom of the screen; nothing moves when the box already fits.
+- When the box reaches its cap and has focus, that target is the one that puts the box in the middle of the screen (equal space above and below; the arithmetic is in `src/thoughts/centerBox.ts`). Only one scroll starts per cap entry: a later keystroke can extend the running scroll further down but never turn it back, and once the box is centred (or within 2px) nothing moves, so a new line never moves the page. If the user scrolls the page away and types again, the box is centred again.
+- Deleting lines lets the page scroll back up on its own as the content gets shorter.
+- At the cap the text scrolls inside the box, and the browser keeps the caret clear of the "Shift + Enter to save" hint with `scroll-padding-block-end`. Focus is kept throughout.
 
 ## Motion
 

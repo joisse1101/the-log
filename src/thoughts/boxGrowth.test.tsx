@@ -23,7 +23,8 @@ beforeEach(async () => {
   })
   box().style.minHeight = '120px'
   box().style.maxHeight = '300px'
-  Object.defineProperty(box(), 'scrollHeight', { configurable: true, get: () => content.height })
+  // The text is measured in the hidden copy of the box, which is the second textarea.
+  Object.defineProperty(mirror(), 'scrollHeight', { configurable: true, get: () => content.height })
 })
 
 afterEach(async () => {
@@ -37,6 +38,12 @@ afterEach(async () => {
 function box(): HTMLTextAreaElement {
   const found = container.querySelector('textarea')
   if (found === null) throw new Error('box not found')
+  return found
+}
+
+function mirror(): HTMLTextAreaElement {
+  const found = container.querySelectorAll('textarea')[1]
+  if (found === undefined) throw new Error('measuring copy not found')
   return found
 }
 
@@ -97,4 +104,30 @@ test('closes the folded parts to the keyboard and screen readers and opens the s
   // Header, hint and box: open at rest means header and box shown, hint closed.
   expect(parts).toEqual(['true', 'false', 'true'])
   expect(container.querySelector('.fold-hint')?.closest('.collapse')?.hasAttribute('inert')).toBe(true)
+})
+
+test('measures the text without ever setting the real box to a zero height', async () => {
+  const heights: string[] = []
+  const style = box().style
+  let current = style.height
+  Object.defineProperty(style, 'height', {
+    configurable: true,
+    get: () => current,
+    set: (value: string) => {
+      heights.push(value)
+      current = value
+    },
+  })
+
+  await type('first', 200)
+  await type('second', 260)
+
+  expect(heights.length).toBeGreaterThan(0)
+  expect(heights.every((value) => Number.parseFloat(value) >= 120)).toBe(true)
+})
+
+test('keeps the measuring copy out of reach: hidden from screen readers and the keyboard', () => {
+  expect(mirror().getAttribute('aria-hidden')).toBe('true')
+  expect(mirror().tabIndex).toBe(-1)
+  expect(mirror().readOnly).toBe(true)
 })

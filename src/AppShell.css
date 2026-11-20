@@ -52,8 +52,8 @@ textarea {
   --page-pad-top: var(--space-7);
   --page-pad-bottom: var(--space-5);
   --page-gap: var(--space-7);
-  /* The box grows with its text until it is as tall as the screen less the page's own padding. */
-  --box-cap: calc(100dvh - var(--page-pad-top) - var(--page-pad-bottom));
+  /* The box grows with its text until it is as tall as the screen less a margin of room above and below it. */
+  --box-cap: calc(100dvh - 2 * var(--space-7));
   --timeline-min: 240px;
   height: 100dvh;
   margin: 0 auto;
@@ -438,8 +438,24 @@ textarea {
 .thought-box__input {
   /* Keeps the caret line clear of the "Shift + Enter to save" hint at the foot of the box. */
   scroll-padding-block-end: var(--space-7);
+  scroll-padding-block-start: var(--space-5);
   /* When the page scrolls the box into view, its focus ring stays on screen. */
   scroll-margin-block: var(--space-3);
+}
+
+/* A hidden copy of the box that the text is measured in, so the real box is never touched */
+.thought-box__mirror {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  transition: none;
 }
 
 .thought-field__input::placeholder {

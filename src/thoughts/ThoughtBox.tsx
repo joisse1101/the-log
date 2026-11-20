@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
-import { readMotionMs } from './motion'
+import { centeringScrollTop, nextScrollTarget, scrollDownToShow } from './centerBox'
+import { animateScrollTop, readMotionEase, readMotionMs } from './motion'
 import { MAX_TAG_LENGTH, type Thought } from './thought'
 import type { SaveResult, ThoughtService } from './thoughtService'
 import { KeepBlocked, type UnsavedThoughtStore } from './unsavedThoughtStore'
+
+/** The page counts as already in place when it is this close to where it should be, in pixels. */
+const SCROLL_TOLERANCE_PX = 2
 
 export const KEEP_BLOCKED_MESSAGE = "This browser can't keep unsaved text. Save before you close the tab."
 
@@ -40,43 +44,82 @@ export function ThoughtBox({ service, unsaved, onSaved, folded, inputRef }: Thou
 
   const fitted = useRef(false)
 
+  const mirrorRef = useRef<HTMLTextAreaElement>(null)
+  /** The page's scroll in progress, if any: where it is heading and how to stop it. */
+  const pageScroll = useRef<{ target: number; stop: () => void } | null>(null)
+
+  /**
+   * Moves the page in step with the box while the user types. The page's scrollTop for the box's
+   * final height is worked out once, and the page scrolls to it along the same curve and over
+   * the same time as the box's height transition, so the two move together: below the cap, just
+   * far enough to keep the box on screen; at the cap, to put the box in the middle of the screen.
+   * A later keystroke can only extend the scroll further down, never turn it back.
+   */
+  const settle = useCallback((input: HTMLTextAreaElement, height: number, atCap: boolean, ms: number) => {
+    const page = input.closest<HTMLElement>('.app-shell')
+    if (page === null || document.activeElement !== input) return
+    const margin = Number.parseFloat(getComputedStyle(input).scrollMarginBottom) || 0
+    const view = page.getBoundingClientRect()
+    const boxTop = input.getBoundingClientRect().top
+    const target = atCap
+      ? centeringScrollTop({
+          boxTop: boxTop - view.top,
+          boxHeight: height,
+          viewHeight: page.clientHeight,
+          scrollTop: page.scrollTop,
+        })
+      : page.scrollTop +
+        scrollDownToShow({ boxBottom: boxTop + height, margin, viewBottom: view.top + page.clientHeight })
+    const next = nextScrollTarget({
+      target,
+      running: pageScroll.current?.target ?? null,
+      current: page.scrollTop,
+      tolerance: SCROLL_TOLERANCE_PX,
+    })
+    if (next === null) return
+    pageScroll.current?.stop()
+    const stop = animateScrollTop(page, next, ms, readMotionEase(input, '--motion-ease'), () => {
+      pageScroll.current = null
+    })
+    pageScroll.current = ms > 0 ? { target: next, stop } : null
+  }, [])
+
   /**
    * Sets the box's height from its text, between its minimum and its cap, so the change can be
-   * animated (field-sizing cannot be). Without `animate` the box jumps to the new height.
+   * animated (field-sizing cannot be). The text is measured in a hidden copy of the box, so the
+   * real box, and the page's scroll position, are never disturbed. Without `animate` the box
+   * jumps to the new height.
    */
   const fit = useCallback(
     (animate: boolean) => {
       const input = inputRef.current
-      if (input === null) return
+      const mirror = mirrorRef.current
+      if (input === null || mirror === null) return
       const style = getComputedStyle(input)
       const min = Number.parseFloat(style.minHeight) || 0
       const cap = Number.parseFloat(style.maxHeight)
       const border = (Number.parseFloat(style.borderTopWidth) || 0) + (Number.parseFloat(style.borderBottomWidth) || 0)
-      const before = input.offsetHeight
-      input.style.transition = 'none'
-      input.style.height = '0px'
-      const wanted = Math.max(input.scrollHeight + border, min)
-      input.style.height = `${animate ? before : wanted}px`
-      void input.offsetHeight
-      input.style.transition = ''
-      input.style.height = `${Number.isFinite(cap) ? Math.min(wanted, cap) : wanted}px`
+      mirror.value = input.value
+      const wanted = Math.max(mirror.scrollHeight + border, min)
+      const height = Number.isFinite(cap) ? Math.min(wanted, cap) : wanted
+      if (animate && input.style.height !== '') {
+        input.style.height = `${height}px`
+      } else {
+        input.style.transition = 'none'
+        input.style.height = `${height}px`
+        void input.offsetHeight
+        input.style.transition = ''
+      }
+      settle(input, height, Number.isFinite(cap) && wanted >= cap, readMotionMs(input, '--motion-grow', 0))
     },
-    [inputRef],
+    [inputRef, settle],
   )
 
   useLayoutEffect(() => {
     if (folded) return
     fit(fitted.current)
     fitted.current = true
-    // Once the box has grown, bring it fully on screen when it has focus, wherever the caret is.
-    const reveal = window.setTimeout(() => {
-      const input = inputRef.current
-      if (input !== null && document.activeElement === input) {
-        input.scrollIntoView?.({ block: 'nearest' })
-      }
-    }, readMotionMs(inputRef.current, '--motion-grow', 0) + 20)
-    return () => window.clearTimeout(reveal)
-  }, [text, folded, fit, inputRef])
+  }, [text, folded, fit])
 
   useEffect(() => {
     const refit = () => fit(false)
@@ -132,6 +175,14 @@ export function ThoughtBox({ service, unsaved, onSaved, folded, inputRef }: Thou
             setError(null)
           }}
           onKeyDown={handleKeyDown}
+        />
+        <textarea
+          ref={mirrorRef}
+          className="thought-field__input thought-box__input thought-box__mirror"
+          aria-hidden="true"
+          tabIndex={-1}
+          readOnly
+          defaultValue=""
         />
         <span id="thought-box-hint" className="thought-field__hint">
           Shift + ⏎ to save
