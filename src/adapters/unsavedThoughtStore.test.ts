@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { FakeStorage } from '../../test/fakeStorage'
+import { FakeStorage } from '../test/fakeStorage'
 import { KeepBlocked, UNSAVED_ITEM, UnsavedThoughtStore } from './unsavedThoughtStore'
 
 test('restores the text it kept', () => {

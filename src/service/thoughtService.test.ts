@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { FakeStorage } from '../../test/fakeStorage'
+import { FakeStorage } from '../test/fakeStorage'
 import { LocalThoughtStore, THOUGHTS_ITEM } from '../adapters/localThoughtStore'
 import { ThoughtService } from './thoughtService'
 

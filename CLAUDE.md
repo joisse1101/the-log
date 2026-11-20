@@ -1,9 +1,9 @@
 <!-- jois-init:docs begin -->
 ## Where the code goes
 
-- Arrange `src/` by feature first, then by layer: `src/<feature>/domain/`, `service/`, `ports/`, `adapters/` and `components/`.
+- Arrange `src/` by layer: `src/domain/`, `service/`, `ports/`, `adapters/` and `components/`. There is no folder per feature.
 - `components/partials/` holds the larger parts that make up a page. `components/` itself holds the shared components.
-- A helper sits next to the component that uses it. Tests sit next to their file; a test that renders the whole page sits at the top of the feature folder.
+- A helper sits next to the component that uses it. Tests sit next to their file; a test that renders the whole page sits in `src/` beside `AppShell.test.tsx`.
 - Screen code is called `components`, never `ui`.
 
 ## Where the docs are

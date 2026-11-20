@@ -1,8 +1,8 @@
 import { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import AppShell from '../AppShell'
-import { FakeStorage } from '../test/fakeStorage'
+import AppShell from './AppShell'
+import { FakeStorage } from './test/fakeStorage'
 import { THOUGHTS_ITEM } from './adapters/localThoughtStore'
 import type { Thought } from './domain/thought'
 
