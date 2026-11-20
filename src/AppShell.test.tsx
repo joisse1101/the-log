@@ -199,6 +199,38 @@ test('offers no place choice and makes no network request when saving', async ()
   expect(fetchSpy).not.toHaveBeenCalled()
 })
 
+/** Stands in for the browser's IntersectionObserver, which jsdom lacks; `report` plays a visibility change. */
+function fakeIntersectionObserver() {
+  let notify: ((entries: { intersectionRatio: number }[]) => void) | null = null
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(callback: (entries: { intersectionRatio: number }[]) => void) {
+        notify = callback
+      }
+      observe() {}
+      disconnect() {}
+    },
+  )
+  return async (intersectionRatio: number) => {
+    await act(async () => {
+      notify?.([{ intersectionRatio }])
+    })
+  }
+}
+
+test('fades the header out while it is only partly in view, and back in when it is whole', async () => {
+  const report = fakeIntersectionObserver()
+  await renderAgain()
+  const header = () => container.querySelector('.app-shell__header')
+
+  await report(0.3)
+  expect(header()?.classList.contains('app-shell__header--clipped')).toBe(true)
+
+  await report(1)
+  expect(header()?.classList.contains('app-shell__header--clipped')).toBe(false)
+})
+
 // Simulates a lost connection: the browser reports offline and every request fails.
 function goOffline() {
   const failingFetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))

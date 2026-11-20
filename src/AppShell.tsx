@@ -19,6 +19,9 @@ const FOLD_FALLBACK_MS = 320
 /** Extra time after an animation during which a scroll in the timeline is still not the user's. */
 const ANIMATION_SLACK_MS = 80
 
+/** Below this share of the header in view, the header counts as scrolled away and is faded out. */
+const HEADER_IN_VIEW_RATIO = 0.99
+
 export default function AppShell() {
   const service = useMemo(() => new ThoughtService(new LocalThoughtStore(localStorage)), [])
   const unsaved = useMemo(() => new UnsavedThoughtStore(localStorage), [])
@@ -38,6 +41,23 @@ export default function AppShell() {
   const stopKeeping = useRef<(() => void) | null>(null)
   const animatingUntil = useRef(0)
   const firstRender = useRef(true)
+  const header = useRef<HTMLElement>(null)
+  const [isHeaderClipped, setHeaderClipped] = useState(false)
+
+  // The artboard has the header scrolled wholly out of view once the box fills the screen. On a short
+  // screen a sliver of the tagline would stay in the gap above the box, so a header that is only
+  // partly in view fades out instead.
+  useEffect(() => {
+    const target = header.current
+    const root = shell.current
+    if (target === null || root === null || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeaderClipped(entry.intersectionRatio < HEADER_IN_VIEW_RATIO),
+      { root, threshold: [HEADER_IN_VIEW_RATIO] },
+    )
+    observer.observe(target)
+    return () => observer.disconnect()
+  }, [])
 
   // Folding or opening the box animates the timeline's height. Until that is over, a scroll in
   // the timeline is the browser's, not the user's; and while the box opens, the card that was at
@@ -109,7 +129,7 @@ export default function AppShell() {
   return (
     <main ref={shell} className={classes.join(' ')}>
       <Collapse open={!folded} gap="var(--page-gap)">
-        <header className="app-shell__header">
+        <header ref={header} className={isHeaderClipped ? 'app-shell__header app-shell__header--clipped' : 'app-shell__header'}>
           <h1 ref={heading} tabIndex={-1} className="app-shell__title">The Log</h1>
           <p className="app-shell__tagline">{thoughts.length === 0 ? 'Your thoughts will appear here.' : 'Write it down. Come back to it later.'}</p>
         </header>

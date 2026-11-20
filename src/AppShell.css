@@ -224,6 +224,11 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  transition: opacity var(--motion-grow) var(--motion-ease);
+}
+
+.app-shell__header--clipped {
+  opacity: 0;
 }
 
 .app-shell__title {
@@ -1039,6 +1044,7 @@ textarea {
 
   .collapse,
   .app-shell,
+  .app-shell__header,
   .thought-box__input,
   .button,
   .icon-button,

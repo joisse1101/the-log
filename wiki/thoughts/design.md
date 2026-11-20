@@ -21,7 +21,7 @@ How the home page lays out the text box and the log, and how a thought's text is
 
 - The box grows with its text, line by line, until it reaches its cap: the screen height less 96px (48px of room above and below). After that its text scrolls inside the box, with the styled bar. The height is set from the text by script (`src/thoughts/ThoughtBox.tsx`) so that it can be animated.
 - The text is measured in an invisible copy of the box (a second textarea positioned inside the box, hidden and with no height), never in the real box, so measuring cannot change the page's height or move its scroll position.
-- While the box is open the page itself scrolls when the content is taller than the screen: a big box pushes the header out of view, and the user scrolls the page down to reach any message under the box and the timeline. The timeline is never shorter than 240px (about two cards) there. Nothing is hidden or locked.
+- While the box is open the page itself scrolls when the content is taller than the screen: a big box pushes the header out of view (a header only partly in view fades out over `--motion-grow`, so no sliver of the tagline is left above a box at its cap; with reduced motion it hides at once), and the user scrolls the page down to reach any message under the box and the timeline. The timeline is never shorter than 240px (about two cards) there. Nothing is hidden or locked.
 - Scrolling the page never folds the box. Only a scroll inside the timeline does.
 - Folded, the page fits the screen and only the timeline scrolls.
 - The page scrollbar looks like the timeline's. The page reserves room for its bar on both sides, so nothing moves when it appears.
