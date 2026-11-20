@@ -3,7 +3,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import AppShell from '../AppShell'
 import { FakeStorage } from '../test/fakeStorage'
-import { readMotionMs } from './motion'
+import { readMotionMs } from './components/motion'
 
 let container: HTMLDivElement
 let root: Root

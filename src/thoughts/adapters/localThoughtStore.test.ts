@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import { FakeStorage } from '../test/fakeStorage'
+import { FakeStorage } from '../../test/fakeStorage'
 import { LocalThoughtStore, THOUGHTS_ITEM } from './localThoughtStore'
-import type { Thought } from './thought'
-import { StorageWriteFailed } from './thoughtStore'
+import type { Thought } from '../domain/thought'
+import { StorageWriteFailed } from '../ports/thoughtStore'
 
 const THOUGHT: Thought = {
   id: 'a',

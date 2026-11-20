@@ -1,5 +1,5 @@
-import { createThought, reviseThought, type Thought } from './thought'
-import { StorageWriteFailed, type ThoughtStore } from './thoughtStore'
+import { createThought, reviseThought, type Thought } from '../domain/thought'
+import { StorageWriteFailed, type ThoughtStore } from '../ports/thoughtStore'
 
 export type SaveResult =
   | { ok: true; thought: Thought }

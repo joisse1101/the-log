@@ -1,6 +1,6 @@
-import { formatThoughtTime } from './formatThoughtTime'
-import type { Thought } from './thought'
-import { CardText } from './CardText'
+import { formatThoughtTime } from '../formatThoughtTime'
+import type { Thought } from '../../domain/thought'
+import { CardText } from '../CardText'
 
 interface LogListProps {
   thoughts: Thought[]

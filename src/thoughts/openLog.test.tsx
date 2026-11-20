@@ -3,8 +3,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import AppShell from '../AppShell'
 import { FakeStorage } from '../test/fakeStorage'
-import { THOUGHTS_ITEM } from './localThoughtStore'
-import type { Thought } from './thought'
+import { THOUGHTS_ITEM } from './adapters/localThoughtStore'
+import type { Thought } from './domain/thought'
 
 let container: HTMLDivElement
 let root: Root

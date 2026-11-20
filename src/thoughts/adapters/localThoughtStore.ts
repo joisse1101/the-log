@@ -1,5 +1,5 @@
-import type { Thought } from './thought'
-import { StorageWriteFailed, type ThoughtStore } from './thoughtStore'
+import type { Thought } from '../domain/thought'
+import { StorageWriteFailed, type ThoughtStore } from '../ports/thoughtStore'
 
 export interface BrowserStorage {
   getItem(name: string): string | null

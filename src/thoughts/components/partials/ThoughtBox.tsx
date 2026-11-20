@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import { centeringScrollTop, nextScrollTarget, scrollDownToShow } from './centerBox'
-import { animateScrollTop, readMotionEase, readMotionMs } from './motion'
-import { MAX_TAG_LENGTH, type Thought } from './thought'
-import type { SaveResult, ThoughtService } from './thoughtService'
-import { KeepBlocked, type UnsavedThoughtStore } from './unsavedThoughtStore'
+import { animateScrollTop, readMotionEase, readMotionMs } from '../motion'
+import { MAX_TAG_LENGTH, type Thought } from '../../domain/thought'
+import type { SaveResult, ThoughtService } from '../../service/thoughtService'
+import { KeepBlocked, type UnsavedThoughtStore } from '../../adapters/unsavedThoughtStore'
 
 /** The page counts as already in place when it is this close to where it should be, in pixels. */
 const SCROLL_TOLERANCE_PX = 2

@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
-import { formatThoughtTime } from './formatThoughtTime'
-import { useDialogKeys, useOpenerHighlight } from './dialogKeys'
+import { formatThoughtTime } from '../formatThoughtTime'
+import { useDialogKeys, useOpenerHighlight } from '../dialogKeys'
 import { thoughtToPlainText } from './plainText'
-import type { Thought } from './thought'
-import type { ThoughtService } from './thoughtService'
+import type { Thought } from '../../domain/thought'
+import type { ThoughtService } from '../../service/thoughtService'
 
 export const DELETE_FAILED_MESSAGE = "Couldn't delete your thought. It is still in your log."
 

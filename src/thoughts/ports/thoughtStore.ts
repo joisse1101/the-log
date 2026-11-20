@@ -1,4 +1,4 @@
-import type { Thought } from './thought'
+import type { Thought } from '../domain/thought'
 
 /** Thrown by a store when the browser refuses a write (full or blocked). */
 export class StorageWriteFailed extends Error {

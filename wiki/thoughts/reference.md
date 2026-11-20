@@ -15,8 +15,8 @@
 
 | Limit | Value | Where |
 |---|---|---|
-| Tag name | 1 to 30 characters, counted without the `#` | `MAX_TAG_LENGTH` in `src/thoughts/thought.ts` |
-| Card text before "Show more" | 7 lines | `src/thoughts/CardText.tsx` |
+| Tag name | 1 to 30 characters, counted without the `#` | `MAX_TAG_LENGTH` in `src/thoughts/domain/thought.ts` |
+| Card text before "Show more" | 7 lines | `src/thoughts/components/CardText.tsx` |
 | Line of card text | 65 characters | `max-width: 65ch` in `src/AppShell.css` |
 
 ## Time formats
@@ -28,7 +28,7 @@
 | Earlier this year | `Sun 15 Nov, 22:10` |
 | An earlier year | `Thu 16 Oct 2025, 07:50` |
 
-Times show in the browser's local time (`src/thoughts/formatThoughtTime.ts`).
+Times show in the browser's local time (`src/thoughts/components/formatThoughtTime.ts`).
 
 ## Calls
 
@@ -38,5 +38,5 @@ Times show in the browser's local time (`src/thoughts/formatThoughtTime.ts`).
 | `ThoughtService.edit(id, text)` | The thought id and the dialog text | `{ok: true, thought}`, or reason `not-found`, `blank`, `storage` or `tag-too-long` |
 | `ThoughtService.delete(id)` | The thought id, after confirmation | `{ok: true}`, or reason `storage` |
 | `ThoughtService.list()` | Nothing | The local thoughts, newest first; an empty list when the item is missing or cannot be read |
-| `parseThoughtText(raw)` in `src/thoughts/thought.ts` | The full text | The text and its tags, or reason `blank` or `tag-too-long` |
+| `parseThoughtText(raw)` in `src/thoughts/domain/thought.ts` | The full text | The text and its tags, or reason `blank` or `tag-too-long` |
 | `UnsavedThoughtStore.keep(text)`, `restore()`, `clear()` | The box text | The kept text on `restore()`; `keep` throws `KeepBlocked` when storage is blocked |
