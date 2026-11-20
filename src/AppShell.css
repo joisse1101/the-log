@@ -253,7 +253,7 @@ textarea {
   }
 
   .app-shell .thought-box__actions {
-    justify-content: stretch;
+    display: flex;
   }
 
   .app-shell .thought-box__save {
@@ -398,8 +398,8 @@ textarea {
 }
 
 .thought-box__actions {
-  display: flex;
-  justify-content: flex-end;
+  /* On a wider screen the box saves with Shift + Enter and its hint, as the Home artboards show; the button is for phones. */
+  display: none;
 }
 
 .thought-field {
