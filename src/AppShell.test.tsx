@@ -28,6 +28,7 @@ afterEach(async () => {
   })
   container.remove()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 function box(): HTMLTextAreaElement {
@@ -196,6 +197,42 @@ test('offers no place choice and makes no network request when saving', async ()
 
   expect(storedThoughts().map((thought) => thought.text)).toEqual(['Here'])
   expect(fetchSpy).not.toHaveBeenCalled()
+})
+
+// Simulates a lost connection: the browser reports offline and every request fails.
+function goOffline() {
+  const failingFetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')))
+  vi.stubGlobal('fetch', failingFetch)
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+  window.dispatchEvent(new Event('offline'))
+  return failingFetch
+}
+
+test('saves a thought as a local thought with no choice offered while disconnected', async () => {
+  const failingFetch = goOffline()
+
+  await type('Offline note')
+  await saveWithShiftEnter()
+
+  expect(container.querySelector('[role="alert"]')).toBeNull()
+  expect(container.querySelector('select, input[type="radio"], input[type="checkbox"]')).toBeNull()
+  expect(shownTexts()).toEqual(['Offline note'])
+  expect(storedThoughts().map((thought) => thought.text)).toEqual(['Offline note'])
+  expect(failingFetch).not.toHaveBeenCalled()
+})
+
+test('opens the log with only local thoughts, newest first, while disconnected', async () => {
+  await type('First')
+  await saveWithShiftEnter()
+  await type('Second')
+  await saveWithShiftEnter()
+  const failingFetch = goOffline()
+
+  await renderAgain()
+
+  expect(container.querySelector('[role="alert"]')).toBeNull()
+  expect(shownTexts()).toEqual(['Second', 'First'])
+  expect(failingFetch).not.toHaveBeenCalled()
 })
 
 test('saves tags from the last line and shows #books and #notes on the card', async () => {

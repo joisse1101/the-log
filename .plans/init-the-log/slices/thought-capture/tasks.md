@@ -8,8 +8,8 @@
   result: npm test -> 24 passed, 0 failed (AppShell save test covers Today HH:MM, UUID id, editedAt null); tsc --noEmit -> clean
 - [x] T-thought-capture-write-empty-box Empty the box after a successful save
   Satisfies: AC-thought-capture-write-box-empties (steps 2.9, 3.1)
-  Verify: After saving "First thought", the box is empty and keeps focus, and typing "Second" then saving adds a second thought above the first.
-  result: npm test -> 24 passed, 0 failed (box empty, focus kept, second thought above first); tsc --noEmit -> clean
+  Verify: After saving "First thought", the box is empty and folds, focus moves to its hint, and opening the box from the hint puts focus back in it; typing "Second" then saving adds a second thought above the first.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 249 tests passed; box empty, focus on the hint, back in the box after the hint, second thought above first)
 - [x] T-thought-capture-write-blank Refuse blank text
   Satisfies: AC-thought-capture-write-blank (steps 1.4, 1.5, 1.6)
   Verify: Save with an empty box and again with "   "; each time "A thought needs some text." shows (failure response "Blank text on write") and item the-log:thoughts is unchanged.
@@ -20,8 +20,8 @@
   result: npm test -> 24 passed, 0 failed (failing write shows the storage message, box keeps "Lost?", log and stored item unchanged); tsc --noEmit -> clean
 - [x] T-thought-capture-write-local-only Save as a local thought with no place choice
   Satisfies: AC-thought-capture-device-save (steps 1.1, 2.1, 2.2, 2.7)
-  Verify: Render the app; no control to choose where a thought is saved exists, and saving "Here" writes it to item the-log:thoughts and makes no network request (rule "Nothing leaves the device"; spy on fetch and see no call).
-  result: npm test -> 24 passed, 0 failed (no place-choice control, fetch spy not called, thought written to the-log:thoughts); tsc --noEmit -> clean; python scripts/check_docs.py -> docs check passed
+  Verify: Render the app; no control to choose where a thought is saved exists, and saving "Here" writes it to item the-log:thoughts and makes no network request (rule "Nothing leaves the device"; spy on fetch and see no call). With the browser reporting offline and every request failing, saving "Offline note" shows no error, offers no choice and stores it locally.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 249 tests passed; no place-choice control, fetch spy not called, saved while offline with no error); tsc --noEmit -> exit code 0; python scripts/check_docs.py -> exit code 0
 
 ## tag-thought
 
@@ -35,7 +35,7 @@
   result: npx vitest run --dir src -> exit code 0 (14 files, 247 tests passed); "#Books,  #books , #BOOKS" stores the single tag books
 - [x] T-thought-capture-tag-too-long Refuse a tag over 30 characters
   Satisfies: AC-thought-capture-tag-too-long (steps 1.5, 1.6, 1.7, 1.8)
-  Verify: Save a thought whose tags line holds a 31-character tag; "Tag “<that tag>” is too long (30 characters at most)." shows (failure response "Tag too long"), the box keeps the text and nothing is stored; a 30-character tag saves.
+  Verify: Save a thought whose tags line holds a 31-character tag; "Tag “<its first 30 characters>…” is too long (30 characters at most)." shows (failure response "Tag too long"), the box keeps the text and nothing is stored; a 30-character tag saves.
   result: npm test -- --run -> 34 passed; a 31-character tag shows "Tag “<tag>” is too long (30 characters at most).", the box keeps its text and nothing is stored; a 30-character tag saves
 - [x] T-thought-capture-tag-empty Drop empty tags
   Satisfies: AC-thought-capture-tag-empty (steps 1.4, 1.9)
@@ -95,8 +95,8 @@
 
 - [x] T-thought-capture-log-show Show local thoughts newest first
   Satisfies: AC-thought-capture-device-log (steps 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7)
-  Verify: Seed three thoughts created today 09:41, yesterday 21:15 and on Sun 15 Nov 22:10; the log shows them in that order as "Today, 09:41", "Yesterday, 21:15" and "Sun 15 Nov, 22:10", each with its text and tags; a thought whose text is "<b>hi</b>" shows those characters literally (rule "rendered as text, never as HTML"); with the item missing the log shows no thoughts and no error; a time stored in UTC shows in the local time zone set for the test (rule "stored in UTC and shown in local time").
-  result: npx vitest run src/thoughts/openLog.test.tsx -> 5 passed, 0 failed; npx tsc --noEmit -p . -> exit 0, no errors; python scripts/check_docs.py -> docs check passed
+  Verify: Seed three thoughts created today 09:41, yesterday 21:15 and on Sun 15 Nov 22:10; the log shows them in that order as "Today, 09:41", "Yesterday, 21:15" and "Sun 15 Nov, 22:10", each with its text and tags; a thought whose text is "<b>hi</b>" shows those characters literally (rule "rendered as text, never as HTML"); with the item missing the log shows no thoughts and no error; a time stored in UTC shows in the local time zone set for the test (rule "stored in UTC and shown in local time"); with the browser reporting offline and every request failing, opening the app again shows the stored thoughts newest first and no error.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 249 tests passed; log order, labels, literal HTML, zones, and the log reopened while offline); tsc --noEmit -> exit code 0; python scripts/check_docs.py -> exit code 0
 - [x] T-thought-capture-test-slice Run the project's tests for the whole slice and fix what fails
   Satisfies: AC-thought-capture-device-log (steps 1.6, 1.7)
   Verify: `npm run typecheck` and `npm test` both exit 0, covering every task of every flow in this slice, and `npm run build` exits 0.
