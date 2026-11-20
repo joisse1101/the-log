@@ -1,0 +1,192 @@
+/* The Log — generated from tokens.json */
+:root, [data-theme="dark"] {
+  --bg: #0d1224; /* Page background. Dark blue in the dark theme, warm off-white in the light theme. */
+  --surface: #131a31; /* Cards and panels, one step lighter than bg so they read as raised. */
+  --surface-raised: #1b2543; /* Modals, above surface. */
+  --scrim: rgba(5, 8, 18, 0.7); /* Dim layer behind an open modal. */
+  --text-primary: #eceef2; /* Headings and main text on bg, surface and surface-raised. 16.0:1 on dark bg, 14.0:1 on light bg. */
+  --text-secondary: #bcc1cc; /* Body copy and entry text on bg, surface and surface-raised. 10.3:1 dark, 7.9:1 light on bg. */
+  --text-tertiary: #9299a8; /* Times, hints and other third-rank text on bg and surface. 6.5:1 dark, 5.4:1 light on bg. */
+  --border: #1b2543; /* Quiet card and modal edges. Decoration only, carries no meaning. */
+  --border-control: #747b8b; /* Edge of a form control on surface; 4.0:1 or better in both themes. */
+  --primary: #f5c0d2; /* Fill of the one main button per view. Pastel pink in dark, dusky pink in light. Label is on-primary. */
+  --primary-hover: #fadde7; /* Primary button fill on hover. Label is on-primary. */
+  --primary-pressed: #ec9db8; /* Primary button fill while pressed. Label is on-primary, 4.5:1 or better. */
+  --on-primary: #2c1220; /* Label on primary, primary-hover and primary-pressed fills. 11.0:1 on dark primary, 5.0:1 on light primary. */
+  --primary-text: #f5c0d2; /* Pink text and tertiary buttons on bg, surface and surface-raised. 11.8:1 dark, 6.1:1 light on bg. */
+  --secondary: #314560; /* Fill of quiet buttons. Label is on-secondary. */
+  --secondary-hover: #435c7b; /* Quiet button fill on hover. Only ever a fill under an on-secondary label (5.5:1 in dark, 6.2:1 in light); never text and never a mark on its own. Also a decorative block on the cover. */
+  --on-secondary: #dbe8f6; /* Label on secondary and secondary-hover. 7.9:1 on secondary in both themes. */
+  --secondary-text: #b7d0ee; /* Blue text on bg and surface. 11.8:1 dark, 6.1:1 light on bg. */
+  --danger: #f2a3a3; /* Fill of the button that confirms a destructive step. Label is on-danger. */
+  --on-danger: #3a1215; /* Label on danger. 8.3:1 dark, 6.4:1 light. */
+  --success: #8fd9a8; /* Success text and ticks, such as a saved or connected message, on bg, surface and surface-raised. 9.1:1 dark, 5.7:1 light at the lowest. Always sits beside words or a tick; never the only sign. */
+  --focus: #b7d0ee; /* Solid 2px keyboard focus ring on bg, surface and surface-raised; 4.2:1 or better in both themes. */
+  --shadow-1: 0 1px 3px rgba(4, 6, 15, 0.14), 0 1px 2px rgba(4, 6, 15, 0.26); /* Buttons and cards. */
+  --shadow-2: 0 3px 6px rgba(4, 6, 15, 0.16), 0 2px 4px rgba(4, 6, 15, 0.13); /* Hovered buttons. */
+  --shadow-3: 0 10px 20px rgba(4, 6, 15, 0.16), 0 3px 6px rgba(4, 6, 15, 0.11); /* Menus and popovers. */
+  --shadow-4: 0 15px 25px rgba(4, 6, 15, 0.16), 0 5px 10px rgba(4, 6, 15, 0.06); /* Raised panels. */
+  --shadow-5: 0 20px 40px rgba(4, 6, 15, 0.22); /* Modals. */
+}
+[data-theme="light"] {
+  --bg: #f3f0eb;
+  --surface: #faf8f5;
+  --surface-raised: #faf8f5;
+  --scrim: rgba(31, 34, 42, 0.45);
+  --text-primary: #1f222a;
+  --text-secondary: #444957;
+  --text-tertiary: #5c6272;
+  --border: #e8e3dc;
+  --border-control: #747b8b;
+  --primary: #c2728a;
+  --primary-hover: #ec9db8;
+  --primary-pressed: #b96b83;
+  --on-primary: #2c1220;
+  --primary-text: #8f3f5a;
+  --secondary: #dbe8f6;
+  --secondary-hover: #b7d0ee;
+  --on-secondary: #314560;
+  --secondary-text: #435c7b;
+  --danger: #9c3a3f;
+  --on-danger: #faf8f5;
+  --success: #1f6b3a;
+  --focus: #587598;
+  --shadow-1: 0 1px 3px rgba(31, 34, 42, 0.14), 0 1px 2px rgba(31, 34, 42, 0.26);
+  --shadow-2: 0 3px 6px rgba(31, 34, 42, 0.16), 0 2px 4px rgba(31, 34, 42, 0.13);
+  --shadow-3: 0 10px 20px rgba(31, 34, 42, 0.16), 0 3px 6px rgba(31, 34, 42, 0.11);
+  --shadow-4: 0 15px 25px rgba(31, 34, 42, 0.16), 0 5px 10px rgba(31, 34, 42, 0.06);
+  --shadow-5: 0 20px 40px rgba(31, 34, 42, 0.22);
+}
+:root {
+  --space-1: 4px; /* Gap between a title and its meta when they wrap. */
+  --space-2: 8px; /* Gap between buttons and inside small buttons. */
+  --space-3: 12px; /* Vertical padding of a medium button. */
+  --space-4: 16px; /* Gap between parts of a card; page edge on phones. */
+  --space-5: 24px; /* Card padding; horizontal padding of a medium button. */
+  --space-6: 32px; /* Modal padding. */
+  --space-7: 48px; /* Space between groups on a page. */
+  --space-8: 64px; /* Large section spacing. */
+  --radius-sm: 8px; /* Small inputs and tags. */
+  --radius-md: 12px; /* Menus and popovers. */
+  --radius-lg: 16px; /* Cards. */
+  --radius-xl: 24px; /* Modals. */
+  --radius-full: 9999px; /* Buttons, always pills. */
+  --font-text: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-ui: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-display: 600 36px/1.25 var(--font-text); /* Page title, used once per page. */
+  --text-heading: 600 24px/1.25 var(--font-text); /* Modal title and section heading. */
+  --text-card-title: 600 20px/1.25 var(--font-text); /* Card heading. */
+  --text-entry: 400 18px/1.75 var(--font-text); /* What the person writes, in cards and modals. Keep lines to 65 characters. */
+  --text-entry-italic: italic 400 18px/1.75 var(--font-text); /* Emphasis inside entry text. */
+  --text-body: 400 16px/1.5 var(--font-ui); /* Default interface text. */
+  --text-button: 600 16px/1.25 var(--font-ui); /* Medium button label. */
+  --text-label: 600 14px/1.5 var(--font-ui); /* Small button label and form label. */
+  --text-meta: 400 14px/1.5 var(--font-ui); /* Times and hints, in text-tertiary. */
+  --text-caption: 400 12px/1.5 var(--font-ui); /* Smallest text; never for essential content. */
+}
+.display {
+  font-family: var(--font-text);
+  font-size: 36px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.heading {
+  font-family: var(--font-text);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.card-title {
+  font-family: var(--font-text);
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.entry {
+  font-family: var(--font-text);
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.entry-italic {
+  font-family: var(--font-text);
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}
+.body {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.button {
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.label {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.meta {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.caption {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-latin-400-italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DM Sans";
+  src: url("fonts/dm-sans-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DM Sans";
+  src: url("fonts/dm-sans-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}

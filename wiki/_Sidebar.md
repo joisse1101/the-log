@@ -5,3 +5,6 @@
 - [Hosting overview](hosting/overview.md)
 - [Hosting reference](hosting/reference.md)
 - [Hosting design](hosting/design.md)
+- [Thoughts overview](thoughts/overview.md)
+- [Thoughts reference](thoughts/reference.md)
+- [Thoughts: timeline and markdown](thoughts/design.md)

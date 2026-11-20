@@ -1,0 +1,74 @@
+import { createThought, reviseThought, type Thought } from '../domain/thought'
+import { StorageWriteFailed, type ThoughtStore } from '../ports/thoughtStore'
+
+export type SaveResult =
+  | { ok: true; thought: Thought }
+  | { ok: false; reason: 'blank' | 'storage' }
+  | { ok: false; reason: 'tag-too-long'; tag: string }
+
+export type EditResult = SaveResult | { ok: false; reason: 'not-found' }
+
+export type DeleteResult = { ok: true } | { ok: false; reason: 'storage' }
+
+export class ThoughtService {
+  constructor(
+    private readonly store: ThoughtStore,
+    private readonly now: () => Date = () => new Date(),
+  ) {}
+
+  write(text: string): SaveResult {
+    const created = createThought(text, this.now())
+    if (!created.ok) {
+      return created
+    }
+    try {
+      this.store.add(created.thought)
+    } catch (error: unknown) {
+      if (error instanceof StorageWriteFailed) {
+        return { ok: false, reason: 'storage' }
+      }
+      throw error
+    }
+    return { ok: true, thought: created.thought }
+  }
+
+  edit(id: string, text: string): EditResult {
+    const stored = this.store.get(id)
+    if (stored === undefined) {
+      return { ok: false, reason: 'not-found' }
+    }
+    const revised = reviseThought(stored, text, this.now())
+    if (!revised.ok) {
+      return revised
+    }
+    if (revised.thought === stored) {
+      return { ok: true, thought: stored }
+    }
+    try {
+      this.store.replace(revised.thought)
+    } catch (error: unknown) {
+      if (error instanceof StorageWriteFailed) {
+        return { ok: false, reason: 'storage' }
+      }
+      throw error
+    }
+    return { ok: true, thought: revised.thought }
+  }
+
+  delete(id: string): DeleteResult {
+    try {
+      this.store.remove(id)
+    } catch (error: unknown) {
+      if (error instanceof StorageWriteFailed) {
+        return { ok: false, reason: 'storage' }
+      }
+      throw error
+    }
+    return { ok: true }
+  }
+
+  /** Local thoughts, newest first. */
+  list(): Thought[] {
+    return [...this.store.all()].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }
+}
