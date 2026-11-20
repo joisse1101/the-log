@@ -53,6 +53,7 @@ Every duration and the easing are custom properties at the top of `src/AppShell.
 ## Markdown
 
 - A thought's text is shown as markdown by `src/thoughts/ThoughtMarkdown.tsx`: headers 1 to 6, paragraphs, bold, italic, struck text, links, inline code, quotes, bullet, numbered and task lists, fenced code, tables and dividers. The look follows the Markdown reference artboard.
+- A line of only `#` marks (such as `#` or `###`) is a header with no words; it shows as those marks in a paragraph, never as an empty header, in the card and in the delete dialog.
 - In a list that mixes plain items and tasks, the plain items keep their bullets; only a list made wholly of tasks has none.
 - The last line of tags is split off before this (see `src/thoughts/thought.ts`) and shown as chips.
 - Tags are typed on the last line, after an empty line, as a comma-separated list where every non-empty item starts with `#`: `#tag1, #tag2`. A tag may contain spaces (`#tag one`); inner runs of spaces collapse to one and the name is lowercased, so `#Tag  One` and `#tag one` are the same tag. Empty items are dropped and duplicates merge.

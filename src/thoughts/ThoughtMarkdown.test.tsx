@@ -46,6 +46,13 @@ test.each([
   expect(heading?.textContent).toBe(source.replace(/^#+ /, ''))
 })
 
+test.each(['#', '###'])('shows a line of only %j as those characters, not as an empty heading', async (marks) => {
+  const shown = await show(`Before\n\n${marks}\n\nAfter`)
+
+  expect(shown.querySelector('h2, h3, h4, h5, h6, .md-h6')).toBeNull()
+  expect(tags(shown, 'p')).toEqual(['Before', marks, 'After'])
+})
+
 test('renders body text as a paragraph and keeps single line breaks', async () => {
   const out = await show('One line\nSecond line\n\nNew paragraph')
 

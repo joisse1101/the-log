@@ -119,6 +119,8 @@ function renderBlock(node: TokenNode, key: number): ReactNode {
     case 'heading_open': {
       const level = Number(token.tag.slice(1))
       const inline = renderInlineLeaf(node.children[0], false)
+      // A line of only #'s is a heading with no words; it shows as the typed marks, not an empty heading.
+      if (inline.length === 0) return <p key={key}>{token.markup}</p>
       // The page title is the h1, so header 1 is an h2 and so on; header 6 is a quiet paragraph.
       if (level >= 6) return <p key={key} className="md-h6">{inline}</p>
       const Tag = `h${level + 1}` as 'h2' | 'h3' | 'h4' | 'h5' | 'h6'

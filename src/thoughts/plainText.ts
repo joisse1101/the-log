@@ -32,9 +32,16 @@ export function thoughtToPlainText(text: string): PlainThought {
   let title: string | null = null
   tokens.forEach((token, index) => {
     if (token.type === 'inline') {
-      const isLeadingHeading = index === 1 && tokens[0].type === 'heading_open'
-      if (isLeadingHeading) title = inlineText(token)
-      else lines.push(inlineText(token))
+      const words = inlineText(token)
+      const opener = tokens[index - 1]
+      // A heading with no words (a line of only #'s) is kept as the typed marks.
+      if (opener.type === 'heading_open' && words === '') {
+        lines.push(opener.markup)
+      } else if (index === 1 && opener.type === 'heading_open') {
+        title = words
+      } else {
+        lines.push(words)
+      }
     } else if (token.type === 'fence' || token.type === 'code_block') {
       lines.push(token.content.replace(/\n$/, ''))
     }
