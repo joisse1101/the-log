@@ -27,20 +27,20 @@
 
 - [x] T-thought-capture-tag-save Read tags from the last line and save them with the thought
   Satisfies: AC-thought-capture-tag-saved (steps 1.1, 1.2, 1.3, 1.4, 1.9, 1.10, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6)
-  Verify: Save "Read tonight", an empty line, then "books, notes"; the stored thought has text "Read tonight" and tags [books, notes], and the card shows #books and #notes. Edit that thought's last line to "books, home" and save; the stored tags become [books, home].
-  result: npm test -> 53 passed, 0 failed; save side: "Read tonight", an empty line, "books, notes" stores text "Read tonight" and tags [books, notes], card shows #books #notes; edit side: test "storing tags: editing the last line to \"books, home\" stores the tags [books, home]" passes
+  Verify: Save "Read tonight", an empty line, then "#books, #reading list"; the stored thought has text "Read tonight" and tags [books, reading list], and the card shows #books and #reading list. Edit that thought's last line to "#books, #home" and save; the stored tags become [books, home]. A last line "books, notes" or "#books, notes" stays part of the text and the thought has no tags.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 247 tests passed); npx tsc --noEmit -p . -> exit code 0; # rule: thought.test.ts and AppShell.test.tsx cover "#books, #notes" saved as tags, spaced tags, edit to "#books, #home", and "Hi", an empty line, "#books, notes" staying text with no tags
 - [x] T-thought-capture-tag-normalise Treat tags that differ only in case or spaces as one tag
   Satisfies: AC-thought-capture-tag-same (steps 1.4, 1.9, 1.10)
-  Verify: Save a thought whose tags line is "Books,  books , #BOOKS"; it is stored with the single tag books.
-  result: npm test -- --run -> 34 passed; "Books,  books , #BOOKS" stores the single tag books
+  Verify: Save a thought whose tags line is "#Books,  #books , #BOOKS"; it is stored with the single tag books.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 247 tests passed); "#Books,  #books , #BOOKS" stores the single tag books
 - [x] T-thought-capture-tag-too-long Refuse a tag over 30 characters
   Satisfies: AC-thought-capture-tag-too-long (steps 1.5, 1.6, 1.7, 1.8)
   Verify: Save a thought whose tags line holds a 31-character tag; "Tag “<that tag>” is too long (30 characters at most)." shows (failure response "Tag too long"), the box keeps the text and nothing is stored; a 30-character tag saves.
   result: npm test -- --run -> 34 passed; a 31-character tag shows "Tag “<tag>” is too long (30 characters at most).", the box keeps its text and nothing is stored; a 30-character tag saves
 - [x] T-thought-capture-tag-empty Drop empty tags
   Satisfies: AC-thought-capture-tag-empty (steps 1.4, 1.9)
-  Verify: Save a thought whose tags line is "books, , ,notes"; it is stored with tags [books, notes] and no empty tag.
-  result: npm test -- --run -> 34 passed; "books, , ,notes" stores [books, notes]
+  Verify: Save a thought whose tags line is "#books, , ,#notes"; it is stored with tags [books, notes] and no empty tag.
+  result: npx vitest run --dir src -> exit code 0 (14 files, 247 tests passed); "#books, , ,#notes" stores [books, notes]
 
 ## keep-unsaved-thought
 

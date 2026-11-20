@@ -13,22 +13,6 @@ export type CreateThoughtResult =
   | { ok: false; reason: 'blank' }
   | { ok: false; reason: 'tag-too-long'; tag: string }
 
-type ParseTagResult =
-  | { ok: true; tag: string | null }
-  | { ok: false; reason: 'tag-too-long'; tag: string }
-
-/** A tag is trimmed, loses a leading #, and is lowercased; an empty item gives no tag. */
-export function parseTag(raw: string): ParseTagResult {
-  const name = raw.trim().replace(/^#/, '').trim().toLowerCase()
-  if (name === '') {
-    return { ok: true, tag: null }
-  }
-  if (name.length > MAX_TAG_LENGTH) {
-    return { ok: false, reason: 'tag-too-long', tag: name }
-  }
-  return { ok: true, tag: name }
-}
-
 type ParseTextResult =
   | { ok: true; text: string; tags: string[] }
   | { ok: false; reason: 'blank' }
@@ -41,9 +25,30 @@ function isTagsLinePosition(lines: string[]): boolean {
 }
 
 /**
- * Splits off the last line as tags when an empty line comes before it, then parses the tags.
- * An empty last line after an empty line is an explicit "no tags" line, so a text that ends in
- * a line after an empty line can be shown in the edit box and read back unchanged.
+ * Reads a line as a comma-separated list where every non-empty item starts with # directly followed
+ * by a name. Returns the names (inner spaces collapsed, lowercased), or null when the line is not
+ * such a list (an item without #, a "# Heading", or no item at all), so the line stays text.
+ */
+function readTagsLine(line: string): string[] | null {
+  const names: string[] = []
+  for (const item of line.split(',')) {
+    const trimmed = item.trim()
+    if (trimmed === '') {
+      continue
+    }
+    if (!/^#\S/.test(trimmed)) {
+      return null
+    }
+    names.push(trimmed.slice(1).replace(/\s+/g, ' ').toLowerCase())
+  }
+  return names.length > 0 ? names : null
+}
+
+/**
+ * Splits off the last line as tags when an empty line comes before it and every non-empty item on it
+ * starts with #; otherwise the line stays text. An empty last line after an empty line is an explicit
+ * "no tags" line, so a text that ends in a tags-looking line can be shown in the edit box and read
+ * back unchanged.
  */
 export function parseThoughtText(raw: string): ParseTextResult {
   const trimmed = raw.trim()
@@ -55,32 +60,34 @@ export function parseThoughtText(raw: string): ParseTextResult {
     return { ok: true, text: rawLines.slice(0, -2).join('\n').trimEnd(), tags: [] }
   }
   const lines = trimmed.split(LINE_BREAK)
-  if (!isTagsLinePosition(lines)) {
+  const names = isTagsLinePosition(lines) ? readTagsLine(lines[lines.length - 1]) : null
+  if (names === null) {
     return { ok: true, text: trimmed, tags: [] }
   }
   const tags: string[] = []
-  for (const item of lines[lines.length - 1].split(',')) {
-    const parsed = parseTag(item)
-    if (!parsed.ok) {
-      return parsed
+  for (const name of names) {
+    if (name.length > MAX_TAG_LENGTH) {
+      return { ok: false, reason: 'tag-too-long', tag: name }
     }
-    if (parsed.tag !== null && !tags.includes(parsed.tag)) {
-      tags.push(parsed.tag)
+    if (!tags.includes(name)) {
+      tags.push(name)
     }
   }
   return { ok: true, text: lines.slice(0, -2).join('\n').trimEnd(), tags }
 }
 
 /**
- * The text as the edit dialog shows it: the text, then the tags on a last line after an empty line.
- * Without tags, a text that would be read as having a tags line gets an empty tags line, so saving
- * it unchanged keeps the text and its (empty) tags.
+ * The text as the edit dialog shows it: the text, then the tags as "#one, #two" on a last line after
+ * an empty line. Without tags, a text whose own last line (after an empty line) is a list of # items
+ * gets an empty tags line, so saving it unchanged keeps the text and its (empty) tags.
  */
 export function thoughtToEditText(thought: Thought): string {
   if (thought.tags.length > 0) {
-    return `${thought.text}\n\n${thought.tags.join(', ')}`
+    return `${thought.text}\n\n${thought.tags.map((tag) => `#${tag}`).join(', ')}`
   }
-  return isTagsLinePosition(thought.text.split(LINE_BREAK)) ? `${thought.text}\n\n` : thought.text
+  const lines = thought.text.split(LINE_BREAK)
+  const endsInTagsLine = isTagsLinePosition(lines) && readTagsLine(lines[lines.length - 1]) !== null
+  return endsInTagsLine ? `${thought.text}\n\n` : thought.text
 }
 
 /** Rule of the Thought aggregate: createdAt never changes; the new text and tags follow the same rules as create. */

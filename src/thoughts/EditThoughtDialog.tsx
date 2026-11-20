@@ -110,7 +110,7 @@ export function EditThoughtDialog({ service, thought, onSaved, onMissing, onClos
           {error}
         </p>
       )}
-      <p className="edit-dialog__tips">Markdown works. Put your tags on the last line, separated by commas.</p>
+      <p className="edit-dialog__tips">Markdown works. Put your tags on the last line, after an empty line, each starting with #, separated by commas.</p>
       <div className="edit-dialog__actions">
         <button type="button" className="button button--secondary" onClick={close}>
           Cancel

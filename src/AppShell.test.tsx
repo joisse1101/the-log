@@ -199,7 +199,7 @@ test('offers no place choice and makes no network request when saving', async ()
 })
 
 test('saves tags from the last line and shows #books and #notes on the card', async () => {
-  await type('Read tonight\n\nbooks, notes')
+  await type('Read tonight\n\n#books, #notes')
   await saveWithShiftEnter()
 
   expect(storedThoughts()[0].text).toBe('Read tonight')
@@ -209,10 +209,10 @@ test('saves tags from the last line and shows #books and #notes on the card', as
   expect(shownTags).toEqual(['#books', '#notes'])
 })
 
-test('stores one tag for "Books,  books , #BOOKS" and drops empty tags', async () => {
-  await type('One\n\nBooks,  books , #BOOKS')
+test('stores one tag for "#Books,  #books , #BOOKS" and drops empty tags', async () => {
+  await type('One\n\n#Books,  #books , #BOOKS')
   await saveWithShiftEnter()
-  await type('Two\n\nbooks, , ,notes')
+  await type('Two\n\n#books, , ,#notes')
   await saveWithShiftEnter()
 
   expect(storedThoughts().map((thought) => thought.tags)).toEqual([['books'], ['books', 'notes']])
@@ -220,16 +220,16 @@ test('stores one tag for "Books,  books , #BOOKS" and drops empty tags', async (
 
 test('refuses a 31-character tag, keeps the text and stores nothing; a 30-character tag saves', async () => {
   const long = 'c'.repeat(31)
-  await type(`Hi\n\n${long}`)
+  await type(`Hi\n\n#${long}`)
   await saveWithShiftEnter()
 
   expect(container.querySelector('[role="alert"]')?.textContent).toBe(
     `Tag “${'c'.repeat(30)}…” is too long (30 characters at most).`,
   )
-  expect(box().value).toBe(`Hi\n\n${long}`)
+  expect(box().value).toBe(`Hi\n\n#${long}`)
   expect(storage.items.has(THOUGHTS_ITEM)).toBe(false)
 
-  await type(`Hi\n\n${'c'.repeat(30)}`)
+  await type(`Hi\n\n#${'c'.repeat(30)}`)
   await saveWithShiftEnter()
 
   expect(storedThoughts()[0].tags).toEqual(['c'.repeat(30)])
@@ -374,7 +374,7 @@ test('opens Edit with the text, its tags line and the note that the time stays',
   await renderWithSeed()
   await openEdit()
 
-  expect(dialogBox().value).toBe('Original\n\nbooks')
+  expect(dialogBox().value).toBe('Original\n\n#books')
   expect(container.querySelector('.edit-dialog__time')?.textContent).toMatch(/^Written .+\. The time stays as it is\.$/)
 })
 
@@ -406,15 +406,23 @@ test('saves an edit with Shift + Enter in the dialog', async () => {
   expect(shownTexts()).toEqual(['Fixed'])
 })
 
-test('storing tags: editing the last line to "books, home" stores the tags [books, home]', async () => {
+test('storing tags: editing the last line to "#books, #home" stores the tags [books, home]', async () => {
   await renderWithSeed({ ...SEEDED, tags: [] })
   await openEdit()
-  await typeInDialog('Original\n\nbooks, home')
+  await typeInDialog('Original\n\n#books, #home')
   await saveDialog()
 
   expect(storedThoughts()[0].tags).toEqual(['books', 'home'])
   const shownTags = [...container.querySelectorAll('.log-list__tag')].map((node) => node.textContent)
   expect(shownTags).toEqual(['#books', '#home'])
+})
+
+test('a last line with a name missing its # stays in the text with no tags', async () => {
+  await type('Hi\n\n#books, notes')
+  await saveWithShiftEnter()
+
+  expect(storedThoughts()[0].text).toBe('Hi\n\n#books, notes')
+  expect(storedThoughts()[0].tags).toEqual([])
 })
 
 test('saving an unchanged edit keeps text "a\\n\\nb" with no tags', async () => {
@@ -481,7 +489,7 @@ test('shows the markdown tips line in the edit dialog', async () => {
   await openEdit()
 
   expect(container.querySelector('.edit-dialog__tips')?.textContent).toBe(
-    'Markdown works. Put your tags on the last line, separated by commas.',
+    'Markdown works. Put your tags on the last line, after an empty line, each starting with #, separated by commas.',
   )
 })
 

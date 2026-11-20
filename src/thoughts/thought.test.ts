@@ -22,36 +22,70 @@ function created(text: string) {
 }
 
 test('reads tags from the last line after an empty line and keeps the text without it', () => {
-  const thought = created('Read tonight\n\nbooks, notes')
+  const thought = created('Read tonight\n\n#books, #notes')
 
   expect(thought.text).toBe('Read tonight')
   expect(thought.tags).toEqual(['books', 'notes'])
 })
 
 test('treats a last line without an empty line before it as text', () => {
-  const thought = created('Read tonight\nbooks, notes')
+  const thought = created('Read tonight\n#books, #notes')
 
-  expect(thought.text).toBe('Read tonight\nbooks, notes')
+  expect(thought.text).toBe('Read tonight\n#books, #notes')
   expect(thought.tags).toEqual([])
 })
 
-test('merges tags that differ only in case, spaces or a leading #', () => {
-  expect(created('Hi\n\nBooks,  books , #BOOKS').tags).toEqual(['books'])
+test('reads tags with spaces, collapsing inner spaces and lowercasing', () => {
+  expect(created('Hi\n\n#tag one, #Tag   Two').tags).toEqual(['tag one', 'tag two'])
+  expect(created('Hi\n\n#Tag  One, #tag one').tags).toEqual(['tag one'])
+})
+
+test('merges tags that differ only in case or spaces', () => {
+  expect(created('Hi\n\n#Books,  #books , #BOOKS').tags).toEqual(['books'])
 })
 
 test('drops empty tags', () => {
-  expect(created('Hi\n\nbooks, , ,notes').tags).toEqual(['books', 'notes'])
+  expect(created('Hi\n\n#books, , ,#notes').tags).toEqual(['books', 'notes'])
+})
+
+test('keeps a mixed last line as text with no tags', () => {
+  const thought = created('Hi\n\n#books, notes, #design')
+
+  expect(thought.text).toBe('Hi\n\n#books, notes, #design')
+  expect(thought.tags).toEqual([])
+})
+
+test('keeps a last line without any # item as text with no tags', () => {
+  const thought = created('Hi\n\nbooks, notes')
+
+  expect(thought.text).toBe('Hi\n\nbooks, notes')
+  expect(thought.tags).toEqual([])
+})
+
+test('keeps a "# Heading" last line as text with no tags', () => {
+  const thought = created('Hi\n\n# Heading')
+
+  expect(thought.text).toBe('Hi\n\n# Heading')
+  expect(thought.tags).toEqual([])
 })
 
 test('refuses a tag over 30 characters and accepts one of 30', () => {
   const long = 'a'.repeat(31)
 
-  expect(createThought(`Hi\n\n${long}`, NOW)).toEqual({ ok: false, reason: 'tag-too-long', tag: long })
-  expect(created(`Hi\n\n${'a'.repeat(30)}`).tags).toEqual(['a'.repeat(30)])
+  expect(createThought(`Hi\n\n#${long}`, NOW)).toEqual({ ok: false, reason: 'tag-too-long', tag: long })
+  expect(created(`Hi\n\n#${'a'.repeat(30)}`).tags).toEqual(['a'.repeat(30)])
 })
 
-test('still reads the last line after several empty lines as tags without a #', () => {
-  const thought = created('Read tonight\n\n\nbooks, notes')
+test('counts a spaced tag without the # and after collapsing spaces', () => {
+  const thirty = `${'a'.repeat(14)} ${'b'.repeat(15)}`
+  const thirtyOne = `${'a'.repeat(15)} ${'b'.repeat(15)}`
+
+  expect(created(`Hi\n\n#${thirty.replace(' ', '   ')}`).tags).toEqual([thirty])
+  expect(createThought(`Hi\n\n#${thirtyOne}`, NOW)).toEqual({ ok: false, reason: 'tag-too-long', tag: thirtyOne })
+})
+
+test('still reads the last line after several empty lines as tags', () => {
+  const thought = created('Read tonight\n\n\n#books, #notes')
 
   expect(thought.text).toBe('Read tonight')
   expect(thought.tags).toEqual(['books', 'notes'])
@@ -64,10 +98,22 @@ test('reads an empty last line after an empty line as no tags and trims it from 
   expect(thought.tags).toEqual([])
 })
 
-test('shows a text with a last line after an empty line with an empty tags line', () => {
+test('shows tags as "#one, #two" on a last line after an empty line', () => {
+  const thought: Thought = { ...created('x'), text: 'a', tags: ['tag one', 'two'] }
+
+  expect(thoughtToEditText(thought)).toBe('a\n\n#tag one, #two')
+})
+
+test('shows a text whose last line looks like tags with an empty tags line', () => {
+  const thought: Thought = { ...created('x'), text: 'a\n\n#b, #c', tags: [] }
+
+  expect(thoughtToEditText(thought)).toBe('a\n\n#b, #c\n\n')
+})
+
+test('shows a text whose last line is not all # items unchanged', () => {
   const thought: Thought = { ...created('x'), text: 'a\n\nb', tags: [] }
 
-  expect(thoughtToEditText(thought)).toBe('a\n\nb\n\n')
+  expect(thoughtToEditText(thought)).toBe('a\n\nb')
 })
 
 test.each([
@@ -75,8 +121,12 @@ test.each([
   ['a\n\nb\n\nc', []],
   ['plain', []],
   ['one\ntwo', []],
+  ['a\n\n#b, #c', []],
+  ['a\n\n#b, c', []],
+  ['a\n\n# Heading', []],
   ['a\n\nb', ['t']],
   ['Read tonight', ['books', 'notes']],
+  ['Read tonight', ['tag one', 'notes']],
 ])('round-trips text %j with tags %j through the edit text', (text, tags) => {
   const thought: Thought = { ...created('x'), text, tags }
 

@@ -29,7 +29,7 @@ The user writes a thought in free-form text, saves it with the current date and 
 
 ## Main flow
 
-1. The user types text in the thought box, optionally ending with an empty line and a tags line such as `books, notes` (tag-thought 1.1).
+1. The user types text in the thought box, optionally ending with an empty line and a tags line such as `#books, #notes` (tag-thought 1.1). A thought with no tags line has no tags.
 2. The user presses Shift + Enter or the Save button (write-thought 1.1).
 3. The app checks the text and reads the tags, creates a thought with a unique id and the current date and time, and saves it in browser storage (write-thought 1.2 to 2.9).
 4. The box empties and the thought shows at the top of the log (write-thought 3.1 to 3.3).
@@ -234,9 +234,9 @@ sequenceDiagram
   participant BS as «infra»<br/>BrowserStorage
   rect rgb(235, 242, 250)
     Note over U,G: Phase 1 - Read the tags
-    U->>B: 1.1 types text, an empty line, then a last line such as "Books, #notes, , notes" and saves
+    U->>B: 1.1 types text, an empty line, then a last line such as "#Books, #notes, , #notes" and saves
     B->>S: 1.2 write(text)
-    S->>T: 1.3 Thought.create(text, now) splits off the last line when it is a comma list after an empty line
+    S->>T: 1.3 Thought.create(text, now) splits off the last line when it is a comma list after an empty line whose every item starts with #
     T->>G: 1.4 Tag.parse(item) for each item of the tags line
     alt a tag is longer than 30 characters
       G-->>T: 1.5 TagTooLong(name)
@@ -422,7 +422,7 @@ sequenceDiagram
 | D id | Decision | Alternatives | Why | Source | Steps |
 |---|---|---|---|---|---|
 | D1 | Project layout and stack: build the code in the existing React + TypeScript + Vitest app; new code goes under `src/thoughts/` and `src/AppShell.tsx` renders it | Describe only, with no code | The stories build the feature and the app shell already uses this stack | user-confirmed | write-thought 1.1 |
-| D2 | Tags are typed on the last line of the text, after an empty line, as a comma-separated list; that line is stored as tags and not as text | A separate tag field with chips | It matches the Home design | user-confirmed | tag-thought 1.3, 1.4 |
+| D2 | Tags are typed on the last line of the text, after an empty line, as a comma-separated list in which every item starts with `#` (a tag may hold spaces: `#tag one`); that line is stored as tags and not as text. A line with any item lacking `#`, or with `# ` (a markdown heading), stays text, so a thought may have no tags | A separate tag field with chips | It matches the Home design | user-confirmed | tag-thought 1.3, 1.4 |
 | D3 | Thought text is shown as plain text with its line breaks; Markdown is not rendered | Render Markdown as in the design | No story asks for Markdown and it would need a library | user-confirmed | write-thought 3.3, open-log 1.7 |
 | D4 | Thoughts are stored in one browser storage item `the-log:thoughts` holding `{version: 1, thoughts: [{id, text, tags, createdAt, editedAt}]}`; the id comes from `crypto.randomUUID()`; times are ISO 8601 in UTC | One item per thought | One item is read and written whole, the same shape a gist file will have later | user-confirmed | write-thought 2.2, open-log 1.4 |
 | D5 | A failed storage write gets one response: "Couldn't save your thought. Your text is still in the box.", the text stays and the log is unchanged; the same branch serves Write a thought and Keep thoughts on this device | A message per story | Both describe the same local write failure | user-confirmed | write-thought 2.6, edit-thought 3.6 |
