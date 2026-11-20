@@ -9,7 +9,7 @@ function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
-/** "Today, 09:41", "Yesterday, 21:15" or "Sun 15 Nov, 22:10", in the browser's local time. */
+/** "Today, 09:41", "Yesterday, 21:15" or "Sun 15 Nov, 22:10" (with the year, "Thu 16 Oct 2025, 07:50", when it is not this year), in the browser's local time. */
 export function formatThoughtTime(createdAt: string, now: Date): string {
   const created = new Date(createdAt)
   const time = `${pad(created.getHours())}:${pad(created.getMinutes())}`
@@ -23,5 +23,6 @@ export function formatThoughtTime(createdAt: string, now: Date): string {
   if (daysAgo === 1) {
     return `Yesterday, ${time}`
   }
-  return `${WEEKDAYS[created.getDay()]} ${created.getDate()} ${MONTHS[created.getMonth()]}, ${time}`
+  const year = created.getFullYear() === now.getFullYear() ? '' : ` ${created.getFullYear()}`
+  return `${WEEKDAYS[created.getDay()]} ${created.getDate()} ${MONTHS[created.getMonth()]}${year}, ${time}`
 }

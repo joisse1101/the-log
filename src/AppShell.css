@@ -5,7 +5,7 @@
  * --motion-fold    the text box folding into the hint, and the hint opening back into the box (height and fade)
  * --motion-grow    the text box growing or shrinking line by line
  * --motion-scroll  the timeline scrolling to the top after a save
- * --motion-ease    the curve used by the fold and the growing box (the scroll uses an ease-out curve in code)
+ * --motion-ease    the curve used by the fold, the growing box and the page scroll that follows it
  * Set a duration to 0ms to switch that motion off. The reduced-motion rule at the end of this file does so for all.
  */
 :root {
@@ -244,6 +244,8 @@ textarea {
     --page-x: var(--space-4);
     --page-pad-top: var(--space-6);
     --page-gap: var(--space-6);
+    /* The Save button and its gap stay on screen with the box, so the box stops that much sooner. */
+    --box-cap: calc(100dvh - 2 * var(--space-7) - var(--space-4) - 48px);
   }
 
   .app-shell--folded {
@@ -261,7 +263,17 @@ textarea {
 
   .app-shell .thought-box .thought-field__input {
     min-height: min(200px, var(--box-cap));
-    padding: var(--space-4) var(--space-4) var(--space-7);
+    padding: var(--space-4);
+    scroll-padding-block-end: var(--space-4);
+  }
+
+  /* No keyboard on a phone to press Shift + Enter, so no hint */
+  .app-shell .thought-box .thought-field__hint {
+    display: none;
+  }
+
+  .app-shell .thought-box .thought-field__error {
+    left: calc(var(--space-4) - var(--space-2));
   }
 
   .app-shell--empty .thought-box .thought-field__input {
@@ -417,8 +429,17 @@ textarea {
   overflow-y: auto;
 }
 
+.edit-dialog .thought-field {
+  /* The field takes whatever height the header, error, tips and buttons leave, so none of them is pushed off screen. */
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .edit-dialog .thought-field__input {
-  max-height: none;
+  flex: 1 1 auto;
+  min-height: min(240px, 100%);
+  max-height: 100%;
 }
 
 /* The new-thought box is sized by script from its text, so that its height can be animated */
@@ -432,13 +453,13 @@ textarea {
 }
 
 .edit-dialog .thought-field__hint {
-  right: var(--space-5);
+  right: calc(var(--space-5) - var(--space-2));
 }
 
 .thought-box__input {
   /* Keeps the caret line clear of the "Shift + Enter to save" hint at the foot of the box. */
   scroll-padding-block-end: var(--space-7);
-  scroll-padding-block-start: var(--space-5);
+  scroll-padding-block-start: var(--space-6);
   /* When the page scrolls the box into view, its focus ring stays on screen. */
   scroll-margin-block: var(--space-3);
 }
@@ -465,10 +486,27 @@ textarea {
 
 .thought-field__hint {
   position: absolute;
-  right: var(--space-6);
+  right: calc(var(--space-6) - var(--space-2));
   bottom: var(--space-3);
   font: var(--text-meta);
   color: var(--text-tertiary);
+  pointer-events: none;
+  /* Text that scrolls under the hint never collides with it. */
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+/* The blank-save message sits in the field at bottom left, as the hint does at bottom right, so nothing below moves. */
+.thought-field__error {
+  position: absolute;
+  left: calc(var(--space-5) - var(--space-2));
+  bottom: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  color: var(--danger);
   pointer-events: none;
 }
 
@@ -478,6 +516,7 @@ textarea {
 .delete-dialog__error {
   margin: 0;
   font: var(--text-label);
+  overflow-wrap: anywhere;
 }
 
 .thought-box__notice {
@@ -574,6 +613,37 @@ textarea {
   gap: var(--space-4);
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* A card's text is cut at seven lines (7 x 28px) until "Show more" is pressed. The cut fades out so no line is sliced. */
+.log-card-text--clamped {
+  max-height: calc(7 * 1.75 * 16px);
+  overflow: hidden;
+}
+
+.log-card-text--cut {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--card-fade, 28px)), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--card-fade, 28px)), transparent);
+}
+
+.log-more {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: var(--text-label);
+  color: var(--primary-text);
+  cursor: pointer;
+}
+
+.log-more:hover {
+  text-decoration: underline;
+}
+
+.log-more:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 /* Markdown inside a card, as the Markdown reference shows it */
@@ -817,6 +887,16 @@ textarea {
 
 .edit-dialog {
   max-width: 640px;
+  /* The field absorbs the height the other parts leave; the dialog itself never scrolls. */
+  overflow: hidden;
+}
+
+.edit-dialog > * {
+  flex: none;
+}
+
+.edit-dialog > .thought-field {
+  flex: 1 1 auto;
 }
 
 .delete-dialog {
@@ -844,6 +924,7 @@ textarea {
 }
 
 .dialog-top .icon-button {
+  flex: none;
   width: 40px;
   height: 40px;
   margin: -4px -8px 0 0;
@@ -862,10 +943,6 @@ textarea {
   color: var(--text-tertiary);
 }
 
-.edit-dialog .thought-field__input {
-  min-height: 240px;
-}
-
 .delete-dialog__preview {
   display: flex;
   flex-direction: column;
@@ -874,6 +951,13 @@ textarea {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+}
+
+.delete-dialog__heading {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 
 .delete-dialog__text {
@@ -900,6 +984,50 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+/* The opener button stays filled while its dialog is open */
+.icon-button[data-dialog-open] {
+  background: var(--secondary);
+  color: var(--on-secondary);
+}
+
+.icon-button--danger[data-dialog-open] {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+@media (max-width: 39.999rem) {
+  .edit-dialog,
+  .delete-dialog {
+    padding: var(--space-5);
+  }
+
+  /* No keyboard on a phone to press Shift + Enter, so no hint; the box text then matches the home box. */
+  .edit-dialog .thought-field__hint {
+    display: none;
+  }
+
+  .edit-dialog .thought-field__input {
+    padding: var(--space-4);
+  }
+
+  .dialog-top .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .edit-dialog__time-note {
+    display: none;
+  }
+
+  .edit-dialog__actions .button,
+  .delete-dialog__actions .button {
+    flex: 1 1 0;
+    min-height: 48px;
+    padding-inline: var(--space-4);
+    white-space: nowrap;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

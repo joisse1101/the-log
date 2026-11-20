@@ -101,3 +101,15 @@ test('edit returns storage and leaves the thought unchanged when the write fails
   expect(service.edit(written.thought.id, 'After')).toEqual({ ok: false, reason: 'storage' })
   expect(service.list()[0].text).toBe('Before')
 })
+
+test('edit with unchanged text writes nothing and keeps editedAt', () => {
+  const { service, setNow } = setup()
+  const written = service.write('Same')
+  if (!written.ok) throw new Error('write failed')
+  setNow(new Date('2026-11-20T08:00:00.000Z'))
+
+  const result = service.edit(written.thought.id, 'Same')
+
+  expect(result).toEqual({ ok: true, thought: written.thought })
+  expect(service.list()[0].editedAt).toBeNull()
+})

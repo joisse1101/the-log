@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject, type TouchEvent, type WheelEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type KeyboardEvent, type RefObject, type TouchEvent, type WheelEvent } from 'react'
 
 /** How far a finger must move down, in pixels, to count as a drag down. */
 const DRAG_DOWN_DISTANCE = 24
 
 /** A scroll event within this many milliseconds of a size change is taken as caused by it. */
 const RESIZE_SCROLL_WINDOW_MS = 150
+
+/** A scroll event within this many milliseconds of a wheel, touch, scrollbar drag or scroll key is the user's. */
+const USER_INPUT_WINDOW_MS = 400
+
+/** Keys that scroll the timeline when it has the focus. */
+const SCROLL_KEYS = new Set(['PageUp', 'PageDown', 'Home', 'End', ' ', 'ArrowUp', 'ArrowDown'])
 
 interface TimelineProps {
   scrollRef: RefObject<HTMLDivElement | null>
@@ -56,6 +62,12 @@ export function Timeline({ scrollRef, onScrolled, onPullDown, isAnimating, child
     return changed
   }, [scrollRef])
 
+  const userInputAt = useRef(Number.NEGATIVE_INFINITY)
+
+  function noteUserInput() {
+    userInputAt.current = performance.now()
+  }
+
   const resizedAt = useRef(Number.NEGATIVE_INFINITY)
 
   const noteResize = useCallback(() => {
@@ -79,10 +91,19 @@ export function Timeline({ scrollRef, onScrolled, onPullDown, isAnimating, child
     const area = scrollRef.current
     if (area === null) return
     const resized = noteSize() || isAnimating() || performance.now() - resizedAt.current < RESIZE_SCROLL_WINDOW_MS
-    if (!resized && area.scrollTop > 0) onScrolled()
+    // A scroll that focus causes (Tab bringing a card into view) follows no user input, so it never folds the box.
+    const byUser = performance.now() - userInputAt.current < USER_INPUT_WINDOW_MS
+    if (!resized && byUser && area.scrollTop > 0) onScrolled()
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // Space on a button or link presses it; it does not scroll.
+    const pressesControl = event.key === ' ' && event.target instanceof Element && event.target.closest('button, a, input, textarea') !== null
+    if (SCROLL_KEYS.has(event.key) && !pressesControl) noteUserInput()
   }
 
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
+    noteUserInput()
     if (event.deltaY < 0 && event.currentTarget.scrollTop <= 0) onPullDown()
   }
 
@@ -92,6 +113,7 @@ export function Timeline({ scrollRef, onScrolled, onPullDown, isAnimating, child
 
   function handleTouchMove(event: TouchEvent<HTMLDivElement>) {
     const start = touchStart.current
+    noteUserInput()
     const now = event.touches[0]?.clientY
     if (start === null || now === undefined) return
     if (now - start > DRAG_DOWN_DISTANCE && event.currentTarget.scrollTop <= 0) {
@@ -109,6 +131,8 @@ export function Timeline({ scrollRef, onScrolled, onPullDown, isAnimating, child
       ref={scrollRef}
       className={classes.join(' ')}
       onScroll={handleScroll}
+      onKeyDown={handleKeyDown}
+      onPointerDown={noteUserInput}
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}

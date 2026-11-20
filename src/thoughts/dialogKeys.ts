@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 const FOCUSABLE = 'button, textarea, input, select, a[href], [tabindex]:not([tabindex="-1"])'
 
@@ -49,4 +49,16 @@ export function useDialogKeys(dialog: RefObject<HTMLElement | null>, onClose: ()
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [dialog])
+}
+
+/**
+ * While a dialog is open, the button that opened it (the focused button when the dialog first renders)
+ * carries data-dialog-open, which the stylesheet shows as a filled background.
+ */
+export function useOpenerHighlight() {
+  const [opener] = useState(() => (document.activeElement instanceof HTMLButtonElement ? document.activeElement : null))
+  useEffect(() => {
+    opener?.setAttribute('data-dialog-open', 'true')
+    return () => opener?.removeAttribute('data-dialog-open')
+  }, [opener])
 }

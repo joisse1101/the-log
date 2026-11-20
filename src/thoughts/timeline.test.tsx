@@ -40,6 +40,7 @@ afterEach(async () => {
   })
   container.remove()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 function timeline(): HTMLElement {
@@ -70,8 +71,18 @@ function trackScroll(area: HTMLElement) {
   })
 }
 
+/** A scroll the browser makes alone, as when focus brings an item into view: no wheel, key or touch comes first. */
+async function scrollTimelineWithoutInput(to: number) {
+  await act(async () => {
+    timeline().scrollTop = to
+    timeline().dispatchEvent(new Event('scroll', { bubbles: true }))
+  })
+}
+
+/** A scroll the user makes: a wheel turn comes just before it. */
 async function scrollTimeline(to: number) {
   await act(async () => {
+    timeline().dispatchEvent(new WheelEvent('wheel', { deltaY: 1, bubbles: true }))
     timeline().scrollTop = to
     timeline().dispatchEvent(new Event('scroll', { bubbles: true }))
   })
@@ -370,4 +381,103 @@ test('shows the tags line as chips and not as text, with the text as markdown', 
     '#notes',
   ])
   expect(card?.querySelector('.log-list__text')?.textContent).not.toContain('books')
+})
+
+test('puts focus in the box when the user wheels up to open it', async () => {
+  await openApp(STORED)
+  trackScroll(timeline())
+  await scrollTimeline(40)
+  await scrollTimeline(0)
+
+  await act(async () => {
+    timeline().dispatchEvent(new WheelEvent('wheel', { deltaY: -30, bubbles: true }))
+  })
+
+  expect(document.activeElement).toBe(box())
+})
+
+test('does not fold the box when focus moving into the timeline scrolls it', async () => {
+  await openApp(STORED)
+  trackScroll(timeline())
+  const edit = container.querySelector<HTMLButtonElement>('.log-list__edit')
+
+  await act(async () => {
+    edit?.focus()
+  })
+  await scrollTimelineWithoutInput(40)
+
+  expect(hint()).toBeNull()
+})
+
+test('folds the box on a wheel scroll that comes right after focus moved into the timeline', async () => {
+  await openApp(STORED)
+  trackScroll(timeline())
+  const edit = container.querySelector<HTMLButtonElement>('.log-list__edit')
+
+  await act(async () => {
+    edit?.focus()
+  })
+  await scrollTimelineWithoutInput(20)
+  await scrollTimeline(40)
+
+  expect(hint()).not.toBeNull()
+})
+
+test('folds the box on a scroll that follows a scroll key press on the timeline', async () => {
+  await openApp(STORED)
+  trackScroll(timeline())
+
+  await act(async () => {
+    timeline().dispatchEvent(new KeyboardEvent('keydown', { key: 'PageDown', bubbles: true }))
+  })
+  await scrollTimelineWithoutInput(40)
+
+  expect(hint()).not.toBeNull()
+})
+
+test('does not fold the box on a scroll that follows only a Tab key press', async () => {
+  await openApp(STORED)
+  trackScroll(timeline())
+
+  await act(async () => {
+    timeline().dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }))
+  })
+  await scrollTimelineWithoutInput(40)
+
+  expect(hint()).toBeNull()
+})
+
+function mockOverflow(overflowing: boolean) {
+  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(overflowing ? 300 : 100)
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(196)
+}
+
+function showMore(): HTMLButtonElement | null {
+  return container.querySelector<HTMLButtonElement>('.log-more')
+}
+
+test('offers no "Show more" for text that fits in seven lines', async () => {
+  mockOverflow(false)
+  await openApp(STORED)
+
+  expect(showMore()).toBeNull()
+})
+
+test('cuts long text and toggles "Show more" and "Show less" with aria-expanded', async () => {
+  mockOverflow(true)
+  await openApp(STORED)
+
+  const button = showMore()
+  expect(button?.tagName).toBe('BUTTON')
+  expect(button?.textContent).toBe('Show more')
+  expect(button?.getAttribute('aria-expanded')).toBe('false')
+  expect(container.querySelector('.log-card-text--clamped')).not.toBeNull()
+
+  await act(async () => {
+    button?.click()
+  })
+
+  expect(showMore()?.textContent).toBe('Show less')
+  expect(showMore()?.getAttribute('aria-expanded')).toBe('true')
+  expect(container.querySelectorAll('.log-card-text--clamped')).toHaveLength(1)
 })

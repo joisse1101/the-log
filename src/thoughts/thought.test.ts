@@ -91,3 +91,12 @@ test.each([
 test.each(['', '   ', '\n \t'])('refuses blank text %j', (text) => {
   expect(createThought(text, NOW)).toEqual({ ok: false, reason: 'blank' })
 })
+
+test('revising with the same text and tags returns the thought unchanged, without a new editedAt', () => {
+  const thought: Thought = { ...created('x'), text: 'Read tonight', tags: ['books', 'notes'] }
+
+  const revised = reviseThought(thought, thoughtToEditText(thought), NOW)
+
+  expect(revised).toEqual({ ok: true, thought })
+  if (revised.ok) expect(revised.thought.editedAt).toBeNull()
+})

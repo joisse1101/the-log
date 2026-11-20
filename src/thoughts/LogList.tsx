@@ -1,6 +1,6 @@
 import { formatThoughtTime } from './formatThoughtTime'
 import type { Thought } from './thought'
-import { ThoughtMarkdown } from './ThoughtMarkdown'
+import { CardText } from './CardText'
 
 interface LogListProps {
   thoughts: Thought[]
@@ -52,7 +52,7 @@ export function LogList({ thoughts, onEdit, onDelete }: LogListProps) {
               </button>
             </div>
           </div>
-          <ThoughtMarkdown className="log-list__text md" text={thought.text} />
+          <CardText text={thought.text} />
           {thought.tags.length > 0 && (
             <ul className="log-list__tags" aria-label="Tags">
               {thought.tags.map((tag) => (

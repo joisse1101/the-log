@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { formatThoughtTime } from './formatThoughtTime'
-import { useDialogKeys } from './dialogKeys'
+import { useDialogKeys, useOpenerHighlight } from './dialogKeys'
+import { thoughtToPlainText } from './plainText'
 import type { Thought } from './thought'
 import type { ThoughtService } from './thoughtService'
 
@@ -16,7 +17,9 @@ interface DeleteThoughtDialogProps {
 export function DeleteThoughtDialog({ service, thought, onDeleted, onClose }: DeleteThoughtDialogProps) {
   const [error, setError] = useState<string | null>(null)
   const dialog = useRef<HTMLDivElement>(null)
+  const plain = thoughtToPlainText(thought.text)
   useDialogKeys(dialog, onClose)
+  useOpenerHighlight()
 
   function confirm() {
     const result = service.delete(thought.id)
@@ -36,7 +39,7 @@ export function DeleteThoughtDialog({ service, thought, onDeleted, onClose }: De
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-note"
+        aria-describedby={error === null ? 'delete-dialog-note' : undefined}
         ref={dialog}
         tabIndex={-1}
       >
@@ -45,9 +48,12 @@ export function DeleteThoughtDialog({ service, thought, onDeleted, onClose }: De
         <time className="delete-dialog__time" dateTime={thought.createdAt}>
           {formatThoughtTime(thought.createdAt, new Date())}
         </time>
-        <p className="delete-dialog__text">{thought.text}</p>
+        {plain.title !== null && <p className="delete-dialog__heading">{plain.title}</p>}
+        {plain.body !== '' && <p className="delete-dialog__text">{plain.body}</p>}
       </div>
-      <p id="delete-dialog-note" className="delete-dialog__note">It will no longer show in your log.</p>
+      {error === null && (
+        <p id="delete-dialog-note" className="delete-dialog__note">It will no longer show in your log.</p>
+      )}
       {error !== null && (
         <p className="delete-dialog__error" role="alert">
           {error}

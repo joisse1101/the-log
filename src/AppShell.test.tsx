@@ -125,6 +125,48 @@ test.each(['', '   '])('refuses blank text %j and leaves the stored item unchang
   expect(shownTexts()).toEqual([])
 })
 
+test('shows the blank-text message inside the field, and clears it on input and on blur', async () => {
+  await type('')
+  await saveWithShiftEnter()
+
+  const alert = container.querySelector('[role="alert"]')
+  expect(alert?.closest('.thought-field')).not.toBeNull()
+  expect(alert?.classList.contains('thought-field__error')).toBe(true)
+
+  await type('a')
+  expect(container.querySelector('[role="alert"]')).toBeNull()
+
+  await type('')
+  await saveWithShiftEnter()
+  expect(container.querySelector('[role="alert"]')).not.toBeNull()
+  await act(async () => {
+    box().focus()
+    box().blur()
+  })
+  expect(container.querySelector('[role="alert"]')).toBeNull()
+})
+
+test('keeps the storage-failure message below the box, outside the field', async () => {
+  storage.failWrites = true
+  await type('Lost?')
+  await saveWithShiftEnter()
+
+  const alert = container.querySelector('[role="alert"]')
+  expect(alert?.closest('.thought-field')).toBeNull()
+  expect(alert?.classList.contains('thought-box__error')).toBe(true)
+})
+
+test('asks for a first thought while the log is empty, then for what happened today', async () => {
+  expect(container.querySelector('.app-shell__tagline')?.textContent).toBe('Your thoughts will appear here.')
+  expect(box().placeholder).toBe('Write your first thought.')
+
+  await type('First thought')
+  await saveWithShiftEnter()
+
+  expect(container.querySelector('.app-shell__tagline')?.textContent).toBe('Write it down. Come back to it later.')
+  expect(box().placeholder).toBe('What happened today?')
+})
+
 test('keeps the text and the log when the storage write fails', async () => {
   await type('Earlier')
   await saveWithShiftEnter()
@@ -182,7 +224,7 @@ test('refuses a 31-character tag, keeps the text and stores nothing; a 30-charac
   await saveWithShiftEnter()
 
   expect(container.querySelector('[role="alert"]')?.textContent).toBe(
-    `Tag “${long}” is too long (30 characters at most).`,
+    `Tag “${'c'.repeat(30)}…” is too long (30 characters at most).`,
   )
   expect(box().value).toBe(`Hi\n\n${long}`)
   expect(storage.items.has(THOUGHTS_ITEM)).toBe(false)
@@ -406,6 +448,43 @@ test('tells the user the thought no longer exists and keeps the dialog open with
   expect(dialogBox().value).toBe('Changed')
 })
 
+test('removes the card from the log and moves focus to the heading when the dialog closes after "no longer exists"', async () => {
+  await renderWithSeed()
+  rowButton('Edit thought').focus()
+  await openEdit()
+  storage.items.delete(THOUGHTS_ITEM)
+  await saveDialog()
+  expect(shownTexts()).toEqual(['Original'])
+  await act(async () => {
+    button('Cancel').click()
+  })
+
+  expect(container.querySelector('.edit-dialog')).toBeNull()
+  expect(shownTexts()).toEqual([])
+  expect(document.activeElement).toBe(container.querySelector('h1'))
+})
+
+test('does not close the edit dialog when the user taps outside it', async () => {
+  await renderWithSeed()
+  await openEdit()
+  await typeInDialog('Half written')
+  await act(async () => {
+    container.querySelector<HTMLElement>('.dialog-scrim')?.click()
+  })
+
+  expect(container.querySelector('.edit-dialog')).not.toBeNull()
+  expect(dialogBox().value).toBe('Half written')
+})
+
+test('shows the markdown tips line in the edit dialog', async () => {
+  await renderWithSeed()
+  await openEdit()
+
+  expect(container.querySelector('.edit-dialog__tips')?.textContent).toBe(
+    'Markdown works. Put your tags on the last line, separated by commas.',
+  )
+})
+
 test('keeps the dialog and the stored thought when the storage write fails on edit', async () => {
   await renderWithSeed()
   await openEdit()
@@ -497,6 +576,33 @@ test('keeps the thought and the stored item when the user cancels the delete', a
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
 })
 
+test('fills the opener button while its dialog is open and clears it on close', async () => {
+  await renderWithSeed()
+  const opener = rowButton('Edit thought')
+  opener.focus()
+  await openEdit()
+  expect(opener.hasAttribute('data-dialog-open')).toBe(true)
+  await act(async () => {
+    button('Cancel').click()
+  })
+
+  expect(opener.hasAttribute('data-dialog-open')).toBe(false)
+})
+
+test('shows a thought written in markdown as plain text with a leading header as the title', async () => {
+  const text = '# Reading **list**\n\n- [x] a [link](https://example.com)\n- `code` item'
+  await renderWithSeed({ ...SEEDED, text, tags: [] })
+  const card = container.querySelector('.log-list__item')
+  const deleteButton = [...(card?.querySelectorAll('button') ?? [])].find((b) => b.getAttribute('aria-label')?.startsWith('Delete thought,'))
+  await act(async () => {
+    deleteButton?.click()
+  })
+
+  expect(deleteDialog()?.querySelector('.delete-dialog__heading')?.textContent).toBe('Reading list')
+  expect(deleteDialog()?.querySelector('.delete-dialog__text')?.textContent).toBe('a link\ncode item')
+  expect(deleteDialog()?.querySelector('a, strong, code')).toBeNull()
+})
+
 test('keeps the thought and says so when the storage write fails on delete', async () => {
   await renderWithTwoSeeds()
   const before = storage.items.get(THOUGHTS_ITEM)
@@ -511,6 +617,7 @@ test('keeps the thought and says so when the storage write fails on delete', asy
   )
   expect(shownTexts()).toEqual(['Other', 'Original'])
   expect(storage.items.get(THOUGHTS_ITEM)).toBe(before)
+  expect(deleteDialog()?.textContent).not.toContain('It will no longer show in your log.')
 })
 
 async function renderAgain() {
@@ -794,7 +901,6 @@ const CLOSERS: Array<[string, string, string, () => Promise<void>]> = [
   ['Delete', 'the scrim', 'Delete thought', async () => container.querySelector<HTMLElement>('.dialog-scrim')?.click()],
   ['Delete', 'Escape', 'Delete thought', async () => void (await press(document.body, 'Escape'))],
   ['Edit', 'the X button', 'Edit thought', async () => (container.querySelector('[aria-label="Close without saving"]') as HTMLElement).click()],
-  ['Edit', 'the scrim', 'Edit thought', async () => container.querySelector<HTMLElement>('.dialog-scrim')?.click()],
   ['Edit', 'Cancel', 'Edit thought', async () => button('Cancel').click()],
   ['Edit', 'Save', 'Edit thought', async () => {
     await typeInDialog('Edited')
@@ -811,4 +917,18 @@ test.each(CLOSERS)('focus returns to the opener after the %s dialog closes by %s
 
   expect(container.querySelector('.delete-dialog, .edit-dialog')).toBeNull()
   expect(document.activeElement).toBe(openerButton)
+})
+
+test('lays the edit dialog out as a column whose field sits beside its error, so the field can give way to the error', async () => {
+  await renderWithSeed()
+  await openEdit()
+  storage.items.delete(THOUGHTS_ITEM)
+  await typeInDialog('Changed')
+  await saveDialog()
+
+  const dialog = container.querySelector('.edit-dialog')
+  const children = [...(dialog?.children ?? [])].map((child) => child.className)
+  expect(children).toContain('thought-field')
+  expect(children.indexOf('edit-dialog__error')).toBe(children.indexOf('thought-field') + 1)
+  expect(dialog?.querySelector('.thought-field')?.parentElement).toBe(dialog)
 })

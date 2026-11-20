@@ -41,6 +41,9 @@ export class ThoughtService {
     if (!revised.ok) {
       return revised
     }
+    if (revised.thought === stored) {
+      return { ok: true, thought: stored }
+    }
     try {
       this.store.replace(revised.thought)
     } catch (error: unknown) {

@@ -111,7 +111,7 @@ export default function AppShell() {
       <Collapse open={!folded} gap="var(--page-gap)">
         <header className="app-shell__header">
           <h1 ref={heading} tabIndex={-1} className="app-shell__title">The Log</h1>
-          <p className="app-shell__tagline">Write it down. Come back to it later.</p>
+          <p className="app-shell__tagline">{thoughts.length === 0 ? 'Your thoughts will appear here.' : 'Write it down. Come back to it later.'}</p>
         </header>
       </Collapse>
       <Collapse open={folded} gap="var(--space-3)">
@@ -120,12 +120,16 @@ export default function AppShell() {
         </button>
       </Collapse>
       <Collapse open={!folded} gap="var(--page-gap)">
-        <ThoughtBox service={service} unsaved={unsaved} onSaved={saved} folded={folded} inputRef={box} />
+        <ThoughtBox
+          service={service} unsaved={unsaved} onSaved={saved} folded={folded}
+          inputRef={box}
+          placeholder={thoughts.length === 0 ? 'Write your first thought.' : 'What happened today?'}
+        />
       </Collapse>
       <Timeline
         scrollRef={timeline}
         onScrolled={() => setFolded(true)}
-        onPullDown={() => folded && unfold()}
+        onPullDown={() => folded && openBox()}
         isAnimating={() => performance.now() < animatingUntil.current}
       >
         <LogList
@@ -151,6 +155,7 @@ export default function AppShell() {
           onSaved={(saved) =>
             setThoughts((current) => current.map((thought) => (thought.id === saved.id ? saved : thought)))
           }
+          onMissing={(id) => setThoughts((current) => current.filter((thought) => thought.id !== id))}
           onClose={() => closeDialog(() => setEditing(null))}
         />
       )}

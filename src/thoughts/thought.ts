@@ -89,6 +89,13 @@ export function reviseThought(thought: Thought, text: string, now: Date): Create
   if (!parsed.ok) {
     return parsed
   }
+  const unchanged =
+    parsed.text === thought.text &&
+    parsed.tags.length === thought.tags.length &&
+    parsed.tags.every((tag, index) => tag === thought.tags[index])
+  if (unchanged) {
+    return { ok: true, thought }
+  }
   return {
     ok: true,
     thought: { ...thought, text: parsed.text, tags: parsed.tags, editedAt: now.toISOString() },
