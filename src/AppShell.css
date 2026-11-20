@@ -55,9 +55,14 @@ textarea {
   /* The box grows with its text until it is as tall as the screen less a margin of room above and below it. */
   --box-cap: calc(100dvh - 2 * var(--space-7));
   --timeline-min: 240px;
+  /* The column is as wide as a card whose text fills its 65-character line: the rail and its gap,
+     the card's padding and border, then the text. A wide screen centres it instead of stretching
+     the cards past their text. The page font is the card text's font, so ch matches here. */
+  --column-max: calc(12px + var(--space-4) + 2 * var(--space-5) + 2px + 65ch);
   height: 100dvh;
   margin: 0 auto;
-  padding: var(--page-pad-top) calc(var(--page-x) - 9px) var(--page-pad-bottom);
+  /* The 9px are the scrollbar room on each side, which sits inside the padding box. */
+  padding: var(--page-pad-top) max(var(--page-x) - 9px, (100% - var(--column-max)) / 2 - 9px) var(--page-pad-bottom);
   display: flex;
   flex-direction: column;
   /* The page's scrollbar takes room on both sides, so nothing moves when it appears. */

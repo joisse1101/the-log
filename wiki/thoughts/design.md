@@ -14,6 +14,7 @@ How the home page lays out the text box and the log, and how a thought's text is
 - A date from an earlier year carries the year: "Thu 16 Oct 2025, 07:50". Today, Yesterday and this year's dates have none.
 - With no thoughts the tagline says "Your thoughts will appear here." and the box asks "Write your first thought."; with thoughts the box asks "What happened today?".
 - The hint button is 44px tall for touch size, a deliberate difference from the 36px of the artboard.
+- A paragraph or quote stops at 65 characters a line (`max-width: 65ch`, as on the artboards), the most that reads comfortably. The page is a column just wide enough for a card whose text fills that line (`--column-max` in `src/AppShell.css`); a wider screen centres the column, with the header, the box and the timeline in it, instead of stretching the cards past their text.
 - On a laptop each card has a dot and a line on its left (the first dot is pink). On a phone the rail is hidden and the cards are tighter.
 - Not built yet, they belong to other slices: the tag filter chips, search, paging and the 100-entry cap, card titles, and the "Saved" toast.
 
