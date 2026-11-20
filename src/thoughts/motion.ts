@@ -47,6 +47,16 @@ export function readMotionEase(from: Element | null, name: string): Ease {
 }
 
 /**
+ * When a script animation should count as started so it keeps pace with a CSS transition set up
+ * in the same task. The browser dates such a transition from the start of the current frame
+ * (the document timeline's time), not from the moment the script ran; starting the script
+ * animation at `now` instead would leave it up to a frame behind. Without a timeline, `now`.
+ */
+export function animationStart(timelineTime: number | null | undefined, now: number): number {
+  return typeof timelineTime === 'number' && timelineTime <= now ? timelineTime : now
+}
+
+/**
  * Scrolls an element to `top` over `ms` milliseconds along `ease`; with no time it jumps.
  * `onDone` runs when the scroll ends on its own. Returns a function that stops it.
  */
@@ -63,7 +73,7 @@ export function animateScrollTop(
     onDone?.()
     return () => undefined
   }
-  const start = performance.now()
+  const start = animationStart(document.timeline?.currentTime as number | null | undefined, performance.now())
   let frame = 0
   function step(now: number) {
     const progress = Math.min(1, (now - start) / ms)
