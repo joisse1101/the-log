@@ -1,16 +1,1064 @@
+@import './styles/tokens.css';
+
+/*
+ * Motion: every duration and easing of the home page is here, in one place.
+ * --motion-fold    the text box folding into the hint, and the hint opening back into the box (height and fade)
+ * --motion-grow    the text box growing or shrinking line by line
+ * --motion-scroll  the timeline scrolling to the top after a save
+ * --motion-ease    the curve used by the fold, the growing box and the page scroll that follows it
+ * Set a duration to 0ms to switch that motion off. The reduced-motion rule at the end of this file does so for all.
+ */
+:root {
+  --motion-fold: 320ms;
+  --motion-grow: 160ms;
+  --motion-scroll: 400ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font: var(--text-body);
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Page: the header and the box on top, the timeline below. The page scrolls when the open box is
+   tall; folded, the page fits the screen and only the timeline scrolls. */
 .app-shell {
-  max-width: 40rem;
+  --page-x: 48px;
+  --page-pad-top: var(--space-7);
+  --page-pad-bottom: var(--space-5);
+  --page-gap: var(--space-7);
+  /* The box grows with its text until it is as tall as the screen less a margin of room above and below it. */
+  --box-cap: calc(100dvh - 2 * var(--space-7));
+  --timeline-min: 240px;
+  /* The column is as wide as a card whose text fills its 65-character line: the rail and its gap,
+     the card's padding and border, then the text. A wide screen centres it instead of stretching
+     the cards past their text. The page font is the card text's font, so ch matches here. */
+  --column-max: calc(12px + var(--space-4) + 2 * var(--space-5) + 2px + 65ch);
+  height: 100dvh;
   margin: 0 auto;
-  padding: 2rem 1rem;
-  font-family: system-ui, sans-serif;
+  /* The 9px are the scrollbar room on each side, which sits inside the padding box. */
+  padding: var(--page-pad-top) max(var(--page-x) - 9px, (100% - var(--column-max)) / 2 - 9px) var(--page-pad-bottom);
+  display: flex;
+  flex-direction: column;
+  /* The page's scrollbar takes room on both sides, so nothing moves when it appears. */
+  scrollbar-gutter: stable both-edges;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: padding-top var(--motion-fold) var(--motion-ease);
+}
+
+/* Shows or hides a part of the page by animating its height (a grid row from 1fr to 0fr) and its fade */
+.collapse {
+  flex: none;
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-bottom: var(--collapse-gap);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--motion-fold) var(--motion-ease),
+    margin-bottom var(--motion-fold) var(--motion-ease),
+    opacity var(--motion-fold) var(--motion-ease),
+    visibility 0s;
+}
+
+.collapse[data-open='false'] {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--motion-fold) var(--motion-ease),
+    margin-bottom var(--motion-fold) var(--motion-ease),
+    opacity var(--motion-fold) var(--motion-ease),
+    visibility 0s linear var(--motion-fold);
+}
+
+/* The padding and the matching negative margin leave room for focus rings inside the clip */
+.collapse__inner {
+  min-height: 0;
+  margin: -6px;
+  padding: 6px;
+  overflow: hidden;
+}
+
+/* Groups the page so it can be made inert behind a dialog; it adds no box, so the layout is unchanged. */
+.app-shell__page {
+  display: contents;
+}
+
+/* Folded: the header is out of the way and the box is a one-line hint above the timeline */
+.app-shell--folded {
+  padding-top: var(--space-4);
+}
+
+.fold-hint {
+  flex: none;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px dashed var(--border-control);
+  border-radius: var(--radius-full);
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.fold-hint:hover {
+  color: var(--text-secondary);
+}
+
+.fold-hint:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Timeline: its own scrolling area. An edge fades out where more logs wait, and the scrollbar is half see-through. */
+.timeline {
+  --fade-top-size: 0px;
+  --fade-bottom-size: 0px;
+  flex: 1 1 0;
+  min-height: var(--timeline-min);
+  /* The bar sits in the page margin, as the artboard's bar overlays the content: the cards
+     line up with the box, and nothing jumps when the log is short enough to need no bar. */
+  margin-right: -9px;
+  scrollbar-gutter: stable;
+  /* The page keeps the reading card in place itself while the box opens (keepInView.ts). */
+  overflow-anchor: none;
+  padding-bottom: var(--space-1);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top-size), #000 calc(100% - var(--fade-bottom-size)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top-size), #000 calc(100% - var(--fade-bottom-size)), transparent 100%);
+}
+
+.timeline--fade-top {
+  --fade-top-size: 32px;
+}
+
+.timeline--fade-bottom {
+  --fade-bottom-size: 32px;
+}
+
+/*
+ * Scrollbar of the timeline: a 5px thumb, 2px from the edge, radius 3px, border-control at 50%,
+ * 8px in from the top and bottom. The thumb carries a 2px transparent border on every side, so
+ * its box is 9px wide, its radius is 5px (3px once the border is taken off) and the track keeps
+ * 6px of margin (8px less the border).
+ */
+.app-shell::-webkit-scrollbar,
+.timeline::-webkit-scrollbar {
+  width: 9px;
+}
+
+.app-shell::-webkit-scrollbar-track,
+.timeline::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+.app-shell::-webkit-scrollbar-thumb,
+.timeline::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border-control) 50%, transparent);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  border-radius: 5px;
+}
+
+/* Scrollbar of the text box: a 6px thumb, 4px from the edge, radius 3px, border-control, 10px in from the ends */
+.thought-field__input::-webkit-scrollbar {
+  width: 14px;
+}
+
+.thought-field__input::-webkit-scrollbar-track {
+  margin-block: 6px;
+  background: transparent;
+}
+
+.thought-field__input::-webkit-scrollbar-thumb {
+  background: var(--border-control);
+  background-clip: padding-box;
+  border: 4px solid transparent;
+  border-radius: 7px;
+}
+
+/* Firefox has no ::-webkit-scrollbar: the closest it offers is a thin bar in the same colours */
+@supports (-moz-appearance: none) {
+  .app-shell,
+  .timeline {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--border-control) 50%, transparent) transparent;
+  }
+
+  .thought-field__input {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-control) transparent;
+  }
+}
+
+/* With no entries yet the box is taller */
+.app-shell--empty .thought-box .thought-field__input {
+  min-height: min(380px, var(--box-cap));
+}
+
+.app-shell__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition: opacity var(--motion-grow) var(--motion-ease);
+}
+
+.app-shell__header--clipped {
+  opacity: 0;
 }
 
 .app-shell__title {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
+  margin: 0;
+  font: var(--text-display);
+  color: var(--text-primary);
 }
 
-.app-shell__placeholder {
+.app-shell__tagline {
   margin: 0;
-  color: #555;
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+}
+
+/* Phone: the Save button sits full width under the box; cards are tighter and have no rail */
+@media (max-width: 39.999rem) {
+  .app-shell {
+    --page-x: var(--space-4);
+    --page-pad-top: var(--space-6);
+    --page-gap: var(--space-6);
+    /* The Save button and its gap stay on screen with the box, so the box stops that much sooner. */
+    --box-cap: calc(100dvh - 2 * var(--space-7) - var(--space-4) - 48px);
+  }
+
+  .app-shell--folded {
+    padding-top: var(--space-4);
+  }
+
+  .app-shell .thought-box__actions {
+    display: flex;
+  }
+
+  .app-shell .thought-box__save {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  .app-shell .thought-box .thought-field__input {
+    min-height: min(200px, var(--box-cap));
+    padding: var(--space-4);
+    scroll-padding-block-end: var(--space-4);
+  }
+
+  /* No keyboard on a phone to press Shift + Enter, so no hint */
+  .app-shell .thought-box .thought-field__hint {
+    display: none;
+  }
+
+  .app-shell .thought-box .thought-field__error {
+    left: calc(var(--space-4) - var(--space-2));
+  }
+
+  .app-shell--empty .thought-box .thought-field__input {
+    min-height: min(380px, var(--box-cap));
+  }
+
+  .app-shell .log-list {
+    gap: var(--space-4);
+  }
+
+  .app-shell .log-list__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell .log-list__rail {
+    display: none;
+  }
+
+  .app-shell .log-list__item {
+    padding: var(--space-4);
+  }
+
+  .app-shell .log-list__header {
+    margin: -12px -8px -12px 0;
+  }
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  border-radius: var(--radius-full);
+  font: var(--text-button);
+  cursor: pointer;
+  transition: background-color 150ms, box-shadow 150ms;
+}
+
+.button--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-1);
+}
+
+.button--primary:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-2);
+}
+
+.button--primary:active {
+  background: var(--primary-pressed);
+}
+
+.button--secondary {
+  background: var(--secondary);
+  color: var(--on-secondary);
+}
+
+.button--secondary:hover {
+  background: var(--secondary-hover);
+}
+
+.button--danger {
+  background: var(--danger);
+  color: var(--on-danger);
+  box-shadow: var(--shadow-1);
+}
+
+.button--danger:hover {
+  box-shadow: var(--shadow-2);
+  filter: brightness(1.08);
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background-color 150ms, color 150ms;
+}
+
+.icon-button:hover {
+  background: var(--secondary);
+  color: var(--on-secondary);
+}
+
+.icon-button--danger {
+  color: var(--danger);
+}
+
+.icon-button--danger:hover {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+.button:focus-visible,
+.icon-button:focus-visible,
+.thought-field__input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Thought box and the edit box share one look */
+.thought-box[hidden] {
+  display: none;
+}
+
+.thought-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.thought-box__actions {
+  /* On a wider screen the box saves with Shift + Enter and its hint, as the Home artboards show; the button is for phones. */
+  display: none;
+}
+
+.thought-field {
+  position: relative;
+}
+
+.thought-field__input {
+  display: block;
+  width: 100%;
+  min-height: min(220px, var(--box-cap));
+  padding: var(--space-5) var(--space-5) var(--space-7);
+  resize: none;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  font: var(--text-entry);
+  font-family: var(--font-ui);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  field-sizing: content;
+  /* Grows with the text, then stops at the screen height and scrolls inside. */
+  /* Leaves room for the header, the Save button and a message under the box, so the page never needs its own scroll. */
+  max-height: var(--box-cap);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.edit-dialog .thought-field {
+  /* The field takes whatever height the header, error, tips and buttons leave, so none of them is pushed off screen. */
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.edit-dialog .thought-field__input {
+  flex: 1 1 auto;
+  min-height: min(240px, 100%);
+  max-height: 100%;
+}
+
+/* The new-thought box is sized by script from its text, so that its height can be animated */
+.thought-box__input {
+  field-sizing: fixed;
+  transition: height var(--motion-grow) var(--motion-ease);
+}
+
+.edit-dialog .thought-field__input {
+  box-shadow: none;
+}
+
+.edit-dialog .thought-field__hint {
+  right: calc(var(--space-5) - var(--space-2));
+}
+
+.thought-box__input {
+  /* Keeps the caret line clear of the "Shift + Enter to save" hint at the foot of the box. */
+  scroll-padding-block-end: var(--space-7);
+  scroll-padding-block-start: var(--space-6);
+  /* When the page scrolls the box into view, its focus ring stays on screen. */
+  scroll-margin-block: var(--space-3);
+}
+
+/* A hidden copy of the box that the text is measured in, so the real box is never touched */
+.thought-box__mirror {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  transition: none;
+}
+
+.thought-field__input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.thought-field__hint {
+  position: absolute;
+  right: calc(var(--space-6) - var(--space-2));
+  bottom: var(--space-3);
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+  pointer-events: none;
+  /* Text that scrolls under the hint never collides with it. */
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+/* The blank-save message sits in the field at bottom left, as the hint does at bottom right, so nothing below moves. */
+.thought-field__error {
+  position: absolute;
+  left: calc(var(--space-5) - var(--space-2));
+  bottom: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  color: var(--danger);
+  pointer-events: none;
+}
+
+.thought-box__notice,
+.thought-box__error,
+.edit-dialog__error,
+.delete-dialog__error {
+  margin: 0;
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.thought-box__notice {
+  color: var(--text-tertiary);
+}
+
+.thought-box__error,
+.edit-dialog__error,
+.delete-dialog__error {
+  color: var(--danger);
+}
+
+/* Log */
+.log-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.log-list__row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  column-gap: var(--space-4);
+}
+
+.log-list__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-5);
+}
+
+.log-list__dot {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: var(--text-tertiary);
+}
+
+.log-list__row:first-child .log-list__dot {
+  background: var(--primary);
+}
+
+.log-list__line {
+  width: 2px;
+  flex-grow: 1;
+  margin-top: var(--space-2);
+  background: var(--border-control);
+  opacity: 0.5;
+}
+
+.log-list__item {
+  min-width: 0;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  transition: box-shadow 150ms;
+}
+
+.log-list__item:hover {
+  box-shadow: var(--shadow-2);
+}
+
+.log-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: -10px -8px -10px 0;
+}
+
+.log-list__time {
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+}
+
+.log-list__buttons {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.log-list__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A card's text is cut at seven lines (7 x 28px) until "Show more" is pressed. The cut fades out so no line is sliced. */
+.log-card-text--clamped {
+  max-height: calc(7 * 1.75 * 16px);
+  overflow: hidden;
+}
+
+.log-card-text--cut {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--card-fade, 28px)), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--card-fade, 28px)), transparent);
+}
+
+.log-more {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font: var(--text-label);
+  color: var(--primary-text);
+  cursor: pointer;
+}
+
+.log-more:hover {
+  text-decoration: underline;
+}
+
+.log-more:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Markdown inside a card, as the Markdown reference shows it */
+.md > * {
+  margin: 0;
+}
+
+.md p,
+.md ul,
+.md ol,
+.md table {
+  font: 400 16px/1.75 var(--font-ui);
+  color: var(--text-secondary);
+}
+
+.md p,
+.md blockquote {
+  max-width: 65ch;
+}
+
+.md h2 {
+  font: var(--text-heading);
+  color: var(--text-primary);
+}
+
+.md h3 {
+  font: var(--text-card-title);
+  color: var(--text-primary);
+}
+
+.md h4 {
+  font: 600 18px/1.25 var(--font-text);
+  color: var(--text-primary);
+}
+
+.md h5 {
+  font: 600 16px/1.25 var(--font-text);
+  color: var(--text-primary);
+}
+
+.md h6 {
+  font: 600 14px/1.25 var(--font-text);
+  color: var(--text-secondary);
+}
+
+.md p.md-h6 {
+  font: italic 400 14px/1.25 var(--font-text);
+  color: var(--text-tertiary);
+}
+
+.md strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.md s {
+  color: var(--text-tertiary);
+}
+
+.md a {
+  color: var(--primary-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.md a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.md code {
+  font: 400 14px/1.6 Consolas, "Courier New", monospace;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+
+.md blockquote {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  font: italic 400 18px/1.75 var(--font-text);
+  color: var(--text-secondary);
+}
+
+.md blockquote > * {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  max-width: none;
+}
+
+.md ul,
+.md ol {
+  padding-left: 24px;
+}
+
+.md ul {
+  list-style-type: disc;
+}
+
+.md ul ul,
+.md ol ul {
+  list-style-type: circle;
+}
+
+.md li + li {
+  margin-top: var(--space-1);
+}
+
+.md li.md-task {
+  list-style: none;
+}
+
+.md .md-tasks {
+  list-style: none;
+  padding-left: 0;
+}
+
+.md-task {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.md-task input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
+.md-task__text--done {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+
+.md-task__more {
+  flex-basis: 100%;
+}
+
+.md pre {
+  box-sizing: border-box;
+  padding: var(--space-4);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.md pre code {
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.md table {
+  width: 100%;
+  border-collapse: collapse;
+  line-height: 1.5;
+}
+
+.md th,
+.md td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.md th {
+  font: 600 14px/1.5 var(--font-ui);
+  color: var(--text-primary);
+  border-bottom-color: var(--border-control);
+}
+
+.md hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border-control);
+  margin: var(--space-2) 0;
+}
+
+.log-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log-list__tag {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--secondary-hover);
+  border-radius: var(--radius-sm);
+  font: var(--text-label);
+  color: var(--secondary-text);
+  overflow-wrap: anywhere;
+}
+
+/* Dialogs */
+.dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.dialog-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+}
+
+.edit-dialog,
+.delete-dialog {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-5);
+}
+
+.edit-dialog {
+  max-width: 640px;
+  /* The field absorbs the height the other parts leave; the dialog itself never scrolls. */
+  overflow: hidden;
+}
+
+.edit-dialog > * {
+  flex: none;
+}
+
+.edit-dialog > .thought-field {
+  flex: 1 1 auto;
+}
+
+.delete-dialog {
+  max-width: 480px;
+}
+
+.dialog-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.delete-dialog__title,
+.edit-dialog__title {
+  margin: 0;
+  font: var(--text-heading);
+  color: var(--text-primary);
+}
+
+.dialog-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.dialog-top .icon-button {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin: -4px -8px 0 0;
+}
+
+.edit-dialog__tips {
+  margin: 0;
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+}
+
+.edit-dialog__time,
+.delete-dialog__time {
+  margin: 0;
+  font: var(--text-meta);
+  color: var(--text-tertiary);
+}
+
+.delete-dialog__preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.delete-dialog__heading {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.delete-dialog__text {
+  margin: 0;
+  font: var(--text-meta);
+  color: var(--text-secondary);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  line-clamp: 7;
+  overflow: hidden;
+}
+
+.delete-dialog__note {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--text-secondary);
+}
+
+.edit-dialog__actions,
+.delete-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+/* The opener button stays filled while its dialog is open */
+.icon-button[data-dialog-open] {
+  background: var(--secondary);
+  color: var(--on-secondary);
+}
+
+.icon-button--danger[data-dialog-open] {
+  background: var(--danger);
+  color: var(--on-danger);
+}
+
+@media (max-width: 39.999rem) {
+  .edit-dialog,
+  .delete-dialog {
+    padding: var(--space-5);
+  }
+
+  /* No keyboard on a phone to press Shift + Enter, so no hint; the box text then matches the home box. */
+  .edit-dialog .thought-field__hint {
+    display: none;
+  }
+
+  .edit-dialog .thought-field__input {
+    padding: var(--space-4);
+  }
+
+  .dialog-top .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .edit-dialog__time-note {
+    display: none;
+  }
+
+  .edit-dialog__actions .button,
+  .delete-dialog__actions .button {
+    flex: 1 1 0;
+    min-height: 48px;
+    padding-inline: var(--space-4);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fold: 0ms;
+    --motion-grow: 0ms;
+    --motion-scroll: 0ms;
+  }
+
+  .collapse,
+  .app-shell,
+  .app-shell__header,
+  .thought-box__input,
+  .button,
+  .icon-button,
+  .log-list__item {
+    transition: none;
+  }
 }

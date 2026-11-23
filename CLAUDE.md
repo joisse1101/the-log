@@ -1,4 +1,12 @@
 <!-- jois-init:docs begin -->
+## Where the code goes
+
+- Arrange `src/` by layer: `src/domain/`, `service/`, `ports/`, `adapters/` and `components/`. There is no folder per feature.
+- `utils/` holds small pure helpers with no screen code and no storage, such as `formatThoughtTime`.
+- `src/components/partials/` holds the larger parts that make up a page. `src/components/` itself holds the shared components.
+- A helper sits next to the component that uses it. Tests sit next to their file; a test that renders the whole page sits in `src/` beside `AppShell.test.tsx`.
+- Screen code is called `components`, never `ui`.
+
 ## Where the docs are
 
 - The docs live in `wiki/` as nested pages. They are the source of truth.
@@ -9,6 +17,7 @@
 | If you work on | Read first |
 | --- | --- |
 | Anything (start here) | [Home](wiki/Home.md) |
+| The home page: timeline, text box, markdown | [Timeline and markdown](wiki/thoughts/design.md) |
 
 Add one row per topic folder as `wiki/` grows.
 <!-- jois-init:docs end -->
