@@ -128,6 +128,8 @@ export default function AppShell() {
 
   return (
     <main ref={shell} className={classes.join(' ')}>
+      {/* While a dialog is open the page behind it is inert, so a screen reader's browse mode cannot reach it either. */}
+      <div className="app-shell__page" inert={editing !== null || deleting !== null}>
       <Collapse open={!folded} gap="var(--page-gap)">
         <header ref={header} className={isHeaderClipped ? 'app-shell__header app-shell__header--clipped' : 'app-shell__header'}>
           <h1 ref={heading} tabIndex={-1} className="app-shell__title">The Log</h1>
@@ -158,6 +160,7 @@ export default function AppShell() {
           onDelete={(thought) => openDialog(() => setDeleting(thought))}
         />
       </Timeline>
+      </div>
       {deleting !== null && (
         <DeleteThoughtDialog
           key={deleting.id}

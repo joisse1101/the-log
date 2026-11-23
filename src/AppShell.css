@@ -107,6 +107,11 @@ textarea {
   overflow: hidden;
 }
 
+/* Groups the page so it can be made inert behind a dialog; it adds no box, so the layout is unchanged. */
+.app-shell__page {
+  display: contents;
+}
+
 /* Folded: the header is out of the way and the box is a one-line hint above the timeline */
 .app-shell--folded {
   padding-top: var(--space-4);

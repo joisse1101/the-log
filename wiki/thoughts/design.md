@@ -74,7 +74,7 @@ The delete dialog (`src/components/partials/DeleteThoughtDialog.tsx`) has two bu
 
 When a save finds the thought gone ("This thought no longer exists."), the card leaves the log as the dialog closes, and focus goes to the page heading, the same as after a delete.
 
-While a dialog is open, the card's Edit or Delete button that opened it keeps a filled background (the `data-dialog-open` attribute, set by `useOpenerHighlight` in `src/components/dialogKeys.ts`). It needs the button to have focus when the dialog opens, which Safari does not give on a click, so there the fill is skipped.
+While a dialog is open, the card's Edit or Delete button that opened it keeps a filled background (the `data-dialog-open` attribute, set by `useOpenerHighlight` in `src/components/dialogKeys.ts`). It needs the button to have focus when the dialog opens, which Safari does not give on a click, so there the fill is skipped. While either dialog is open, the page behind it (header, box and log) is inert (`.app-shell__page` in `src/AppShell.tsx`), so neither Tab nor a screen reader's browse mode can reach it.
 
 Below 40rem the dialogs use `--space-5` padding, the X button is 44px, and the action buttons share the full row at 48px high.
 

@@ -683,6 +683,26 @@ test('fills the opener button while its dialog is open and clears it on close', 
   expect(opener.hasAttribute('data-dialog-open')).toBe(false)
 })
 
+test('makes the page behind an open dialog inert, and not the dialog, until it closes', async () => {
+  await renderWithSeed()
+  const page = container.querySelector('.app-shell__page')
+  expect(page?.hasAttribute('inert')).toBe(false)
+
+  await openEdit()
+  expect(page?.hasAttribute('inert')).toBe(true)
+  expect(page?.contains(box())).toBe(true)
+  expect(dialogBox().closest('[inert]')).toBeNull()
+
+  await act(async () => {
+    button('Cancel').click()
+  })
+  expect(page?.hasAttribute('inert')).toBe(false)
+
+  await pressDeleteOn(SEEDED.text)
+  expect(page?.hasAttribute('inert')).toBe(true)
+  expect(deleteDialog()?.closest('[inert]')).toBeNull()
+})
+
 test('shows a thought written in markdown as plain text with a leading header as the title', async () => {
   const text = '# Reading **list**\n\n- [x] a [link](https://example.com)\n- `code` item'
   await renderWithSeed({ ...SEEDED, text, tags: [] })
