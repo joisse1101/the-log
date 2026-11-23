@@ -143,6 +143,12 @@ Scope: Feature: Thought Log > Thought Capture.
 
 ```mermaid
 classDiagram
+  class AppShell {
+    <<boundary>>
+    +thoughts Thought[]
+    +openEdit(thought)
+    +openDelete(thought)
+  }
   class ThoughtBox {
     <<boundary>>
     +save()
@@ -150,10 +156,9 @@ classDiagram
   }
   class LogList {
     <<boundary>>
-    +show(thoughts)
-    +prepend(thought)
-    +update(thought)
-    +remove(id)
+    +thoughts Thought[]
+    +onEdit(thought)
+    +onDelete(thought)
   }
   class EditThoughtDialog {
     <<boundary>>
@@ -169,7 +174,7 @@ classDiagram
   class ThoughtService {
     <<service>>
     +write(text) SaveResult
-    +edit(id, text) SaveResult
+    +edit(id, text) EditResult
     +delete(id) DeleteResult
     +list() Thought[]
   }
@@ -181,13 +186,13 @@ classDiagram
       +Tag[] tags
       +string createdAt
       +string editedAt
-      +create(text, now) Thought
-      +revise(text, now) Thought
+      +createThought(text, now)$ CreateThoughtResult
+      +reviseThought(thought, text, now)$ CreateThoughtResult
+      +parseThoughtText(raw)$ ParseTextResult
     }
     class Tag {
       <<value object>>
       +string name
-      +parse(raw) Tag
     }
   }
   note for Thought "Rule: text is never blank, createdAt never changes, tags are unique and 1 to 30 characters"
@@ -222,8 +227,13 @@ classDiagram
   Thought *-- "0..*" Tag : tags
   ThoughtBox --> ThoughtService : write
   ThoughtBox --> UnsavedThoughtStore : keep, restore, clear
-  ThoughtBox --> LogList : prepend
-  LogList --> ThoughtService : list
+  AppShell --> ThoughtService : list
+  AppShell --> ThoughtBox : renders
+  AppShell --> LogList : renders with thoughts
+  AppShell --> EditThoughtDialog : opens
+  AppShell --> DeleteThoughtDialog : opens
+  AppShell ..> LocalThoughtStore : creates
+  AppShell ..> LocalUnsavedThoughtStore : creates
   EditThoughtDialog --> ThoughtService : edit
   DeleteThoughtDialog --> ThoughtService : delete
   ThoughtService --> Thought : creates, revises
@@ -242,7 +252,7 @@ classDiagram
 sequenceDiagram
   actor U as User
   participant B as «boundary»<br/>ThoughtBox
-  participant L as «boundary»<br/>LogList
+  participant L as «boundary»<br/>AppShell
   participant S as «service»<br/>ThoughtService
   participant T as «root entity»<br/>Thought
   participant LS as «adapter»<br/>LocalThoughtStore
@@ -290,7 +300,7 @@ sequenceDiagram
 sequenceDiagram
   actor U as User
   participant B as «boundary»<br/>ThoughtBox
-  participant L as «boundary»<br/>LogList
+  participant L as «boundary»<br/>AppShell
   participant S as «service»<br/>ThoughtService
   participant T as «root entity»<br/>Thought
   participant G as «value object»<br/>Tag
@@ -375,7 +385,7 @@ sequenceDiagram
 %%{init: {'themeVariables': {'signalTextColor':'#1f2328','labelTextColor':'#1f2328','loopTextColor':'#1f2328','signalColor':'#444','labelBoxBkgColor':'#dde3ea','labelBoxBorderColor':'#444'}}}%%
 sequenceDiagram
   actor U as User
-  participant L as «boundary»<br/>LogList
+  participant L as «boundary»<br/>AppShell
   participant E as «boundary»<br/>EditThoughtDialog
   participant S as «service»<br/>ThoughtService
   participant T as «root entity»<br/>Thought
@@ -433,7 +443,7 @@ sequenceDiagram
 %%{init: {'themeVariables': {'signalTextColor':'#1f2328','labelTextColor':'#1f2328','loopTextColor':'#1f2328','signalColor':'#444','labelBoxBkgColor':'#dde3ea','labelBoxBorderColor':'#444'}}}%%
 sequenceDiagram
   actor U as User
-  participant L as «boundary»<br/>LogList
+  participant L as «boundary»<br/>AppShell
   participant X as «boundary»<br/>DeleteThoughtDialog
   participant S as «service»<br/>ThoughtService
   participant LS as «adapter»<br/>LocalThoughtStore
@@ -465,7 +475,7 @@ sequenceDiagram
 %%{init: {'themeVariables': {'signalTextColor':'#1f2328','labelTextColor':'#1f2328','loopTextColor':'#1f2328','signalColor':'#444','labelBoxBkgColor':'#dde3ea','labelBoxBorderColor':'#444'}}}%%
 sequenceDiagram
   actor U as User
-  participant L as «boundary»<br/>LogList
+  participant L as «boundary»<br/>AppShell
   participant S as «service»<br/>ThoughtService
   participant LS as «adapter»<br/>LocalThoughtStore
   participant BS as «infra»<br/>BrowserStorage

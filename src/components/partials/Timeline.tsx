@@ -16,7 +16,7 @@ interface TimelineProps {
   scrollRef: RefObject<HTMLDivElement | null>
   /** Called when the timeline scrolls away from its top. */
   onScrolled: () => void
-  /** Called when the user drags or wheels down while the timeline is at its top. */
+  /** Called when the user drags down or wheels up while the timeline is at its top. */
   onPullDown: () => void
   /** True while the page is animating the box open or shut: a scroll then is not the user's. */
   isAnimating: () => boolean
