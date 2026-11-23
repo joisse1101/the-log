@@ -5,7 +5,7 @@
 | Item | Holds | Written when |
 |---|---|---|
 | `the-log:thoughts` | `{version: 1, thoughts: [{id, text, tags, createdAt, editedAt}]}` | A thought is saved, edited or deleted |
-| `the-log:unsaved-thought` | The new-thought box's text, as typed | On every input; removed after a successful save |
+| `the-log:unsaved-thought` | The new-thought box's text, as typed | On every input; removed after a successful save, or emptied when the browser refuses the removal |
 
 - `id` comes from `crypto.randomUUID()`.
 - `createdAt` and `editedAt` are ISO 8601 times in UTC, and `editedAt` is `null` until the first edit.
@@ -39,4 +39,4 @@ Times show in the browser's local time (`src/utils/formatThoughtTime.ts`).
 | `ThoughtService.delete(id)` | The thought id, after confirmation | `{ok: true}`, or reason `storage` |
 | `ThoughtService.list()` | Nothing | The local thoughts, newest first; an empty list when the item is missing or cannot be read |
 | `parseThoughtText(raw)` in `src/domain/thought.ts` | The full text | The text and its tags, or reason `blank` or `tag-too-long` |
-| `UnsavedThoughtStore.keep(text)`, `restore()`, `clear()` (`src/ports/unsavedThoughtStore.ts`; `LocalUnsavedThoughtStore` keeps it in browser storage) | The box text | The kept text on `restore()`; `keep` throws `KeepBlocked` when storage is blocked |
+| `UnsavedThoughtStore.keep(text)`, `restore()`, `clear()` (`src/ports/unsavedThoughtStore.ts`; `LocalUnsavedThoughtStore` keeps it in browser storage) | The box text | The kept text on `restore()`; `keep` throws `KeepBlocked` when storage is blocked; `clear` empties the text when it cannot be removed, and throws `KeepBlocked` only when both fail |

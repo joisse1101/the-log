@@ -26,8 +26,14 @@ export class LocalUnsavedThoughtStore implements UnsavedThoughtStore {
   clear(): void {
     try {
       this.storage.removeItem(UNSAVED_ITEM)
-    } catch (error: unknown) {
-      throw new KeepBlocked({ cause: error })
+    } catch (removeError: unknown) {
+      // A kept text left behind would come back into the box on reload and could be saved twice,
+      // so when the item cannot be removed it is emptied instead; restore() reads '' as nothing kept.
+      try {
+        this.storage.setItem(UNSAVED_ITEM, '')
+      } catch {
+        throw new KeepBlocked({ cause: removeError })
+      }
     }
   }
 }

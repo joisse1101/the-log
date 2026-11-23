@@ -352,6 +352,23 @@ test('clears the kept text after a successful save and shows an empty box on reo
   expect(box().value).toBe('')
 })
 
+test('leaves nothing to restore after a save when the browser refuses to remove the kept text', async () => {
+  storage.unremovableItems.add(UNSAVED_ITEM)
+  await type('Done')
+  await saveWithShiftEnter()
+
+  expect(storedThoughts().map((thought) => thought.text)).toEqual(['Done'])
+  await act(async () => {
+    root.unmount()
+  })
+  root = createRoot(container)
+  await act(async () => {
+    root.render(<AppShell />)
+  })
+
+  expect(box().value).toBe('')
+})
+
 test('says once that unsaved text cannot be kept and still saves', async () => {
   storage.blockedItems.add(UNSAVED_ITEM)
   const message = "This browser can't keep unsaved text. Save before you close the tab."

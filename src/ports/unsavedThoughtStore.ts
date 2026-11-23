@@ -12,6 +12,6 @@ export interface UnsavedThoughtStore {
   keep(text: string): void
   /** Returns the kept text, or an empty string when none is kept or storage is blocked. */
   restore(): string
-  /** Throws KeepBlocked when the browser refuses the removal. */
+  /** Leaves nothing to restore: removes the text, or empties it when it cannot be removed. Throws KeepBlocked when both fail. */
   clear(): void
 }

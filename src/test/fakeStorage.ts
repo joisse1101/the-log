@@ -2,13 +2,15 @@ import type { BrowserStorage } from '../adapters/browserStorage'
 
 /**
  * In-memory stand-in for browser storage; `failWrites` makes setItem throw like a full disk,
- * `blockedItems` makes setItem throw a SecurityError for the named items only, and
- * `unreadableItems` makes getItem throw a SecurityError for the named items only.
+ * `blockedItems` makes setItem throw a SecurityError for the named items only,
+ * `unreadableItems` makes getItem throw a SecurityError for the named items only, and
+ * `unremovableItems` makes removeItem throw a SecurityError for the named items only.
  */
 export class FakeStorage implements BrowserStorage {
   readonly items = new Map<string, string>()
   readonly blockedItems = new Set<string>()
   readonly unreadableItems = new Set<string>()
+  readonly unremovableItems = new Set<string>()
   failWrites = false
 
   getItem(name: string): string | null {
@@ -29,6 +31,9 @@ export class FakeStorage implements BrowserStorage {
   }
 
   removeItem(name: string): void {
+    if (this.unremovableItems.has(name)) {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    }
     this.items.delete(name)
   }
 }
