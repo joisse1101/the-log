@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { formatThoughtTime } from '../formatThoughtTime'
+import { formatThoughtTime } from '../../utils/formatThoughtTime'
 import { useDialogKeys, useOpenerHighlight } from '../dialogKeys'
 import { thoughtToPlainText } from './plainText'
 import type { Thought } from '../../domain/thought'

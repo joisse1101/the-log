@@ -1,4 +1,4 @@
-import type { BrowserStorage } from '../adapters/localThoughtStore'
+import type { BrowserStorage } from '../adapters/browserStorage'
 
 /**
  * In-memory stand-in for browser storage; `failWrites` makes setItem throw like a full disk,

@@ -11,7 +11,7 @@ import type { Thought } from './domain/thought'
 import { ThoughtBox } from './components/partials/ThoughtBox'
 import { ThoughtService } from './service/thoughtService'
 import { Timeline } from './components/partials/Timeline'
-import { UnsavedThoughtStore } from './adapters/unsavedThoughtStore'
+import { LocalUnsavedThoughtStore } from './adapters/localUnsavedThoughtStore'
 
 /** How long a fold takes where the stylesheet gives no `--motion-fold`. */
 const FOLD_FALLBACK_MS = 320
@@ -24,7 +24,7 @@ const HEADER_IN_VIEW_RATIO = 0.99
 
 export default function AppShell() {
   const service = useMemo(() => new ThoughtService(new LocalThoughtStore(localStorage)), [])
-  const unsaved = useMemo(() => new UnsavedThoughtStore(localStorage), [])
+  const unsaved = useMemo(() => new LocalUnsavedThoughtStore(localStorage), [])
   const [thoughts, setThoughts] = useState<Thought[]>(() => service.list())
   const [editing, setEditing] = useState<Thought | null>(null)
   const [deleting, setDeleting] = useState<Thought | null>(null)

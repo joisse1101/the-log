@@ -1,4 +1,4 @@
-import { formatThoughtTime } from '../formatThoughtTime'
+import { formatThoughtTime } from '../../utils/formatThoughtTime'
 import type { Thought } from '../../domain/thought'
 import { CardText } from '../CardText'
 

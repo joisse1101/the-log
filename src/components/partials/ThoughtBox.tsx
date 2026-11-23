@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import { centeringScrollTop, nextScrollTarget, scrollDownToShow } from './centerBox'
 import { animateScrollTop, readMotionEase, readMotionMs } from '../motion'
-import { MAX_TAG_LENGTH, type Thought } from '../../domain/thought'
-import type { SaveResult, ThoughtService } from '../../service/thoughtService'
-import { KeepBlocked, type UnsavedThoughtStore } from '../../adapters/unsavedThoughtStore'
+import type { Thought } from '../../domain/thought'
+import type { ThoughtService } from '../../service/thoughtService'
+import { BLANK_MESSAGE, failureMessage } from '../failureMessages'
+import { KeepBlocked, type UnsavedThoughtStore } from '../../ports/unsavedThoughtStore'
 
 /** The page counts as already in place when it is this close to where it should be, in pixels. */
 const SCROLL_TOLERANCE_PX = 2
@@ -13,34 +14,12 @@ const PHONE_QUERY = '(max-width: 39.999rem)'
 
 export const KEEP_BLOCKED_MESSAGE = "This browser can't keep unsaved text. Save before you close the tab."
 
-export const BLANK_MESSAGE = 'A thought needs some text.'
-export const STORAGE_MESSAGE = "Couldn't save your thought. Your text is still in the box."
-
 /** The height of the Save row under the box, with the gap above it. */
 function actionsHeight(input: HTMLTextAreaElement): number {
   const box = input.closest<HTMLElement>('.thought-box')
   const actions = box?.querySelector<HTMLElement>('.thought-box__actions')
   if (box === null || box === undefined || actions === null || actions === undefined) return 0
   return actions.getBoundingClientRect().height + (Number.parseFloat(getComputedStyle(box).rowGap) || 0)
-}
-
-/** A name longer than this is shortened in the message so the line stays readable. */
-const SHOWN_TAG_CHARS = 30
-
-export function tagTooLongMessage(tag: string): string {
-  const shown = tag.length > SHOWN_TAG_CHARS ? `${tag.slice(0, SHOWN_TAG_CHARS)}…` : tag
-  return `Tag “${shown}” is too long (${MAX_TAG_LENGTH} characters at most).`
-}
-
-export function failureMessage(failure: Exclude<SaveResult, { ok: true }>): string {
-  switch (failure.reason) {
-    case 'blank':
-      return BLANK_MESSAGE
-    case 'tag-too-long':
-      return tagTooLongMessage(failure.tag)
-    case 'storage':
-      return STORAGE_MESSAGE
-  }
 }
 
 interface ThoughtBoxProps {

@@ -1,9 +1,9 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { formatThoughtTime } from '../formatThoughtTime'
+import { formatThoughtTime } from '../../utils/formatThoughtTime'
 import { thoughtToEditText, type Thought } from '../../domain/thought'
 import type { EditResult, ThoughtService } from '../../service/thoughtService'
 import { useDialogKeys, useOpenerHighlight } from '../dialogKeys'
-import { failureMessage } from './ThoughtBox'
+import { failureMessage } from '../failureMessages'
 
 export const NOT_FOUND_MESSAGE = 'This thought no longer exists.'
 

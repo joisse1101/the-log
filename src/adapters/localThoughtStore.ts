@@ -1,11 +1,6 @@
 import type { Thought } from '../domain/thought'
+import type { BrowserStorage } from './browserStorage'
 import { StorageWriteFailed, type ThoughtStore } from '../ports/thoughtStore'
-
-export interface BrowserStorage {
-  getItem(name: string): string | null
-  setItem(name: string, value: string): void
-  removeItem(name: string): void
-}
 
 export const THOUGHTS_ITEM = 'the-log:thoughts'
 const ITEM_VERSION = 1

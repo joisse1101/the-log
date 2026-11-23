@@ -2,6 +2,7 @@
 ## Where the code goes
 
 - Arrange `src/` by layer: `src/domain/`, `service/`, `ports/`, `adapters/` and `components/`. There is no folder per feature.
+- `utils/` holds small pure helpers with no screen code and no storage, such as `formatThoughtTime`.
 - `components/partials/` holds the larger parts that make up a page. `components/` itself holds the shared components.
 - A helper sits next to the component that uses it. Tests sit next to their file; a test that renders the whole page sits in `src/` beside `AppShell.test.tsx`.
 - Screen code is called `components`, never `ui`.

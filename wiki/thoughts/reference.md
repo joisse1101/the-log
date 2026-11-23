@@ -28,7 +28,7 @@
 | Earlier this year | `Sun 15 Nov, 22:10` |
 | An earlier year | `Thu 16 Oct 2025, 07:50` |
 
-Times show in the browser's local time (`src/components/formatThoughtTime.ts`).
+Times show in the browser's local time (`src/utils/formatThoughtTime.ts`).
 
 ## Calls
 
@@ -39,4 +39,4 @@ Times show in the browser's local time (`src/components/formatThoughtTime.ts`).
 | `ThoughtService.delete(id)` | The thought id, after confirmation | `{ok: true}`, or reason `storage` |
 | `ThoughtService.list()` | Nothing | The local thoughts, newest first; an empty list when the item is missing or cannot be read |
 | `parseThoughtText(raw)` in `src/domain/thought.ts` | The full text | The text and its tags, or reason `blank` or `tag-too-long` |
-| `UnsavedThoughtStore.keep(text)`, `restore()`, `clear()` | The box text | The kept text on `restore()`; `keep` throws `KeepBlocked` when storage is blocked |
+| `UnsavedThoughtStore.keep(text)`, `restore()`, `clear()` (`src/ports/unsavedThoughtStore.ts`; `LocalUnsavedThoughtStore` keeps it in browser storage) | The box text | The kept text on `restore()`; `keep` throws `KeepBlocked` when storage is blocked |

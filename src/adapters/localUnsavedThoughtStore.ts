@@ -1,16 +1,9 @@
-import type { BrowserStorage } from './localThoughtStore'
+import { KeepBlocked, type UnsavedThoughtStore } from '../ports/unsavedThoughtStore'
+import type { BrowserStorage } from './browserStorage'
 
 export const UNSAVED_ITEM = 'the-log:unsaved-thought'
 
-/** Thrown when the browser refuses to keep or clear the unsaved text. */
-export class KeepBlocked extends Error {
-  constructor(options?: ErrorOptions) {
-    super('The browser cannot keep unsaved text.', options)
-    this.name = 'KeepBlocked'
-  }
-}
-
-export class UnsavedThoughtStore {
+export class LocalUnsavedThoughtStore implements UnsavedThoughtStore {
   constructor(private readonly storage: BrowserStorage) {}
 
   keep(text: string): void {
@@ -21,7 +14,6 @@ export class UnsavedThoughtStore {
     }
   }
 
-  /** Returns the kept text, or an empty string when none is kept or storage is blocked. */
   restore(): string {
     try {
       return this.storage.getItem(UNSAVED_ITEM) ?? ''

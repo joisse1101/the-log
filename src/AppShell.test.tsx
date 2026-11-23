@@ -5,7 +5,7 @@ import AppShell from './AppShell'
 import { FakeStorage } from './test/fakeStorage'
 import { THOUGHTS_ITEM } from './adapters/localThoughtStore'
 import type { Thought } from './domain/thought'
-import { UNSAVED_ITEM } from './adapters/unsavedThoughtStore'
+import { UNSAVED_ITEM } from './adapters/localUnsavedThoughtStore'
 
 let container: HTMLDivElement
 let root: Root

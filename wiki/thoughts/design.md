@@ -204,10 +204,14 @@ classDiagram
     +item the-log:thoughts
   }
   class UnsavedThoughtStore {
-    <<adapter>>
+    <<port>>
     +keep(text)
     +restore() string
     +clear()
+  }
+  class LocalUnsavedThoughtStore {
+    <<adapter>>
+    +item the-log:unsaved-thought
   }
   class BrowserStorage {
     <<infra>>
@@ -227,7 +231,8 @@ classDiagram
   ThoughtStore ..> Thought : stores
   LocalThoughtStore ..|> ThoughtStore
   LocalThoughtStore --> BrowserStorage
-  UnsavedThoughtStore --> BrowserStorage
+  LocalUnsavedThoughtStore ..|> UnsavedThoughtStore
+  LocalUnsavedThoughtStore --> BrowserStorage
 ```
 
 #### write-thought
@@ -326,7 +331,7 @@ sequenceDiagram
   actor U as User
   participant B as «boundary»<br/>ThoughtBox
   participant S as «service»<br/>ThoughtService
-  participant US as «adapter»<br/>UnsavedThoughtStore
+  participant US as «adapter»<br/>LocalUnsavedThoughtStore
   participant BS as «infra»<br/>BrowserStorage
   rect rgb(235, 242, 250)
     Note over U,BS: Phase 1 - Keep the text while typing
